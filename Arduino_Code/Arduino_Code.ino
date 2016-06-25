@@ -18,6 +18,7 @@ Copyright (c) 2016 Geoff Spielman. All rights reserved.
 
  String recString = "";
  boolean newAvail = false;
+ String recMessage = "";
 
 void setup() {
  Serial.begin(9600);
@@ -90,14 +91,43 @@ void serialEvent()
       {  
         endIndex = recString.indexOf("/n");
       }
-      //PROCESS STRING
+      //PROCESS MESSAGE
       if (recString.charAt(0) == 'm') {
-        //Message Processing
-        Serial.println("I have recieved a message");
+        recMessage= recString.substring(2, endIndex);
+        Serial.print("Received Message:");
+        Serial.println(recMessage);
+        
+      //PROCESS SEQUENCE  
       }
       if (recString.charAt(0) == 's') {
-        //Sequence Processing
         Serial.println("I have received a sequence");
+        Serial.print("It contains this many digits: ");
+        int digits = (recString.length()-1)/2;
+        Serial.println(digits);
+        /*
+        int* seq = new int[(recString.length()-1)/2];
+        Serial.println(sizeof(*seq));
+        for (int i = 2; i < recString.length(); i++)
+        {
+        }
+        */
+        int seqArr[digits];
+        for (int i = 2; i <= (digits*2); i += 2)
+        {
+          seqArr[i/2 -1] = recString.charAt(i) - '0';
+        }
+        /*Verify that you can actually create arrays of variable size
+        Serial.print("Created array size: ");
+        Serial.println(sizeof(seqArr) / sizeof(int));
+        */
+        //Test Sequence Array
+        for (int i = 0; i < digits; i ++)
+        {
+          Serial.println(seqArr[i]);  
+        }
+        
+        
+        
       }
 
       
