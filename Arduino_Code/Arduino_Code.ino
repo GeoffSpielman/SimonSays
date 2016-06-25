@@ -5,7 +5,7 @@
   const int btn3 = 8;
   const int led0 = 5;
   const int led1 = 3;
-  const int led2 = 9;
+  const int led2 = 4;
   const int led3 = 10;
 
  int btn[] = {btn0, btn1, btn2, btn3};
@@ -17,10 +17,10 @@ void setup() {
  pinMode(btn1, INPUT);
  pinMode(btn2, INPUT);
  pinMode(btn3, INPUT);
- pinMode(led0, INPUT);
- pinMode(led1, INPUT);
- pinMode(led2, INPUT);
- pinMode(led3, INPUT);
+ pinMode(led0, OUTPUT);
+ pinMode(led1, OUTPUT);
+ pinMode(led2, OUTPUT);
+ pinMode(led3, OUTPUT);
  
  Serial.println("Starting Program");
  
@@ -29,14 +29,21 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   for (int i = 0; i < 4; i ++) {
-    //if (digitalRead(btn[i] == HIGH)) {
-    //  digitalWrite(led[i], HIGH);
-    //}
-    //else {
+    if (digitalRead(btn[i]) == 1) {
+      digitalWrite(led[i], HIGH);
+      Serial.print("LED ");
+      Serial.print(i);
+      Serial.print(" on    ");
+    }
+    else {
       digitalWrite(led[i], LOW);
-    //}
+      Serial.print("LED ");
+      Serial.print(i);
+      Serial.print(" off    ");
+    }
       
   }
+  Serial.println(" ");
   Serial.print("Button0: ");
   Serial.print(digitalRead(btn0));
   Serial.print("   Button1: ");
