@@ -1,4 +1,4 @@
-/*
+ /*
 Created by Geoff Spielman on 2016-06-25.
 Copyright (c) 2016 Geoff Spielman. All rights reserved.
 */
@@ -23,7 +23,9 @@ Copyright (c) 2016 Geoff Spielman. All rights reserved.
  int seqIndex;
  unsigned long timeOfLastChange;
  int seqArr[100];
+ int repeatArr[100];
  int seqSize;
+ boolean playerRepeating = false;
  boolean playerCreating = false;
  boolean prevBtns[] = {false, false, false, false};
  
@@ -47,7 +49,7 @@ void setup() {
 void loop() {
   
   // put your main code here, to run repeatedly:
-  if (playerCreating)
+  if (playerCreating || playerRepeating)
   {
     for (int i = 0; i < 4; i ++) {
       if (digitalRead(btn[i]) == 1) {
@@ -76,7 +78,7 @@ void loop() {
      
      
     //If sequence index is less than the length, we are still outputting the sequence
-    if((seqIndex < seqSize) && playerCreating == false){
+    if((seqIndex < seqSize) && playerRepeating == false && playerCreating == false){
       //If an LED was on and change must be made
       if (LEDon && (millis() - timeOfLastChange >= 1000))
       {
@@ -85,7 +87,9 @@ void loop() {
         seqIndex += 1;
         if (seqIndex == seqSize)
         {
-          playerCreating = true;
+          playerRepeating = true;
+          for (int i = 0; i < 4; i ++)
+            prevBtns[i] = false;
           seqIndex = 0;
         }
         timeOfLastChange = millis();        
@@ -100,6 +104,71 @@ void loop() {
       }
       
     }
+    else if (playerRepeating && (seqIndex < seqSize)) 
+    {
+      //Check each button for change
+      for (int i = 0; i < 4; i ++)
+      {
+        if (!prevBtns[i] && digitalRead(btn[i]))
+        {
+          prevBtns[i] = true;
+        }
+        else if(prevBtns[i] && (digitalRead(btn[i]) == false))
+        {
+          prevBtns[i] = false;
+          repeatArr[seqIndex] = i;
+          seqIndex += 1;
+          //Check user for correctness
+          if (seqIndex == seqSize)
+          {
+            boolean correct = true;
+            for(int i = 0; i < 4; i ++)
+            {
+              if(seqArr[i] != repeatArr[i])
+                correct = false;
+            }
+            if(correct)
+            {
+              //PLAYER CORRECT, prepare for create phase
+              //Simple display
+              for (int o = 0; o < 3; o ++)
+              {
+                for (int i = 0; i < 4; i ++)
+                {
+                  digitalWrite(led[i], HIGH);
+                  delay(150);
+                  digitalWrite(led[i], LOW);
+                }
+              }
+              playerRepeating = false;
+              playerCreating = true;
+              seqIndex = 0;
+              for (int i = 0; i < 4; i ++)
+                prevBtns[i] = false;
+            }
+            else {
+              for (int i = 0; i < 5; i ++)
+              {
+                digitalWrite(led[0], HIGH);
+                delay(180);
+                digitalWrite(led[0], LOW);
+                delay(120);
+              }
+
+              //REMOVE THIS LATER, JUST FOR TESTING
+              playerRepeating = false;
+              playerCreating = true;
+              seqIndex = 0;
+              for (int i = 0; i < 4; i ++)
+                prevBtns[i] = false;
+            }
+            
+          }
+         }
+      }
+    }
+
+    
     else if (playerCreating && (seqIndex < seqSize))
     {
       //Check each button for change
@@ -123,6 +192,8 @@ void loop() {
               oString = String(oString + String(seqArr[i]));
             }
             Serial.println(oString);
+            for (int i = 0; i < 4; i ++)
+              digitalWrite(led[i], LOW);
             playerCreating = false;
             //TAKE THIS OUT LATER
             arduinoTurn = false;
