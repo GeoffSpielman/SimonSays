@@ -5,12 +5,21 @@
 import sys
 import time
 import serial
-ser = serial.Serial('/dev/ttyACM0', 9600)
+ser = serial.Serial('/dev/ttyACM1', 9600, timeout=1)
 contentIsMessage = False
+arduinoTurn = False
+gameOver = False
+
+def IsAnInt(recString):
+    try:
+        int(recString)
+        return True
+    except ValueError:
+        return False
 
 #SET FROM SOCKET IO
 recMessage = "this is purely a message"
-recSequence = "2 4 1 2 4 3 6 4 3 5"
+recSequence = "3 2 1 0"
 
 
 
@@ -24,11 +33,37 @@ if (contentIsMessage):
 else:
     #Process sequence and send to Arduino
     oString = "s " + recSequence + "|"
+    seqLength = int((len(recSequence)+1) / 2)
     BA = bytearray()
     BA.extend(map(ord, oString))
     print(BA)
     ser.write(BA)
-    
+    arduinoTurn = True
+
+
+
+
+##Waiting for sequence/messages from arduino
+while (gameOver == False):
+    if (ser.inWaiting() != 0):
+        recSequence = ser.readline().strip()
+        print(recSequence)
+        
+        seqString = recSequence.decode('utf-8')
+        print(seqString)
+        #for i in range(seqLength):
+        #    seqString[i] = str(recSequence[i])
+        #print(recSequence)
+        
+        #print(ser.inWaiting())
+    #Look for a message
+    #recData = ser.readline().strip()
+
+    #DATA IS A SEQUENCE
+    #if (IsAnInt(recData[0])):
+    #print("I received a sequence")
+
+    #Send any messages
 
 
 
@@ -43,12 +78,7 @@ else:
 ##BAS=bytearray()
 ##BAS.extend(map(ord, Stp))
 ##
-##def IsAnInt(recString):
-##    try:
-##        int(recString)
-##        return True
-##    except ValueError:
-##        return False
+##
 ##
 ##print('Type "stop" at any time to stop car')
 ##print('To maintain levels, don\'t enter integer. Valid input: 0<int<255')
@@ -80,4 +110,4 @@ else:
 ##    BA.extend(map(ord, output))
 ##    #print (BA)
 ##    ser.write(BA)
-
+ser.close()
