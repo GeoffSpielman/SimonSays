@@ -42,7 +42,6 @@ void setup() {
  recString.reserve(200);
  //seqSize = 0;
  seqIndex = 0;
- Serial.println("-----Start-----");
 }
 
 void loop() {
@@ -88,17 +87,13 @@ void loop() {
         {
           playerCreating = true;
           seqIndex = 0;
-          Serial.println("PLAYER, CREATE YOUR ENGINES");
         }
         timeOfLastChange = millis();        
         
       }
       //LED is off and change must be made
       else if (!LEDon && (millis() - timeOfLastChange >= 500))
-      {
-          Serial.print("Turning on LED ");
-          Serial.println(seqArr[seqIndex]);
-          
+      {          
           digitalWrite(led[seqArr[seqIndex]], HIGH);
           LEDon = true;
           timeOfLastChange = millis();
@@ -112,8 +107,6 @@ void loop() {
       {
         if (!prevBtns[i] && digitalRead(btn[i]))
         {
-          Serial.print("YOU'RE PRESSING BTN ");
-          Serial.println(i);
           prevBtns[i] = true;
         }
         else if(prevBtns[i] && (digitalRead(btn[i]) == false))
@@ -121,15 +114,15 @@ void loop() {
           prevBtns[i] = false;
           seqArr[seqIndex] = i;
           seqIndex += 1;
-          Serial.print("Added this button to sequence: ");
-          Serial.println(i);
           if (seqIndex == seqSize)
           {
-            Serial.println("YOU ARE DONE ENTERING. YOUR SEQUENCE:");
+            //Convert int array to string
+            String oString;
             for (int i = 0; i < seqSize; i++)
             {
-              Serial.println(seqArr[i]);
+              oString = String(oString + String(seqArr[i]));
             }
+            Serial.println(oString);
             playerCreating = false;
             //TAKE THIS OUT LATER
             arduinoTurn = false;
@@ -188,9 +181,7 @@ void serialEvent()
       //PROCESS SEQUENCE  
       }
       if (recString.charAt(0) == 's') {
-        Serial.print("Received sequence containing this many digits: ");
         seqSize = (recString.length()-1)/2;
-        Serial.println(seqSize);
         /*
         int* seq = new int[(recString.length()-1)/2];
         Serial.println(sizeof(*seq));
