@@ -30,5 +30,38 @@ class SocketIOManager: NSObject {
         socket.emit("incrementor", message)
     }
     
+    func sendSequence(message : String) {
+        socket.emit("sequencePhone", message)
+    }
+    
+    func recieveMessage(type : String, message : String) {
+        socket.emit("incrementor", message)
+    }
+    
+    func listenForSequence(completionHandler: (recievedData : [Int]!) -> Void) {
+        
+        socket.on("time") { (dataArray, ack) -> Void in
+            
+            let messageArr = String(dataArray[0]).characters.split{$0 == ","}.map(String.init)
+            
+            
+            print(String(dataArray[0]))
+            
+            var numberArr : [Int] = []
+            
+            for i in messageArr {
+                let trimmedString = i.stringByTrimmingCharactersInSet(NSCharacterSet(charactersInString: "0123456789").invertedSet)
+                
+                numberArr.append(Int(trimmedString)!)
+            }
+            
+            completionHandler(recievedData: numberArr)
+            
+        }
+
+    }
+    
+
+    
     
 }

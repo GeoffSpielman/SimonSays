@@ -40,6 +40,7 @@
 		0A83F6481D1F361A0094B4A1 /* SwiftRegex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A83F6311D1F361A0094B4A1 /* SwiftRegex.swift */; };
 		0A83F6491D1F361A0094B4A1 /* WebSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A83F6321D1F361A0094B4A1 /* WebSocket.swift */; };
 		0AB274951D1F380900C370E8 /* DigitalLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB274941D1F380900C370E8 /* DigitalLight.swift */; };
+		0AB274971D1F7CFB00C370E8 /* ChatLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB274961D1F7CFB00C370E8 /* ChatLog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +100,7 @@
 		0A83F6311D1F361A0094B4A1 /* SwiftRegex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftRegex.swift; sourceTree = "<group>"; };
 		0A83F6321D1F361A0094B4A1 /* WebSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
 		0AB274941D1F380900C370E8 /* DigitalLight.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DigitalLight.swift; sourceTree = "<group>"; };
+		0AB274961D1F7CFB00C370E8 /* ChatLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatLog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -153,6 +155,7 @@
 				0A83F61A1D1F35430094B4A1 /* SocketIOManager.swift */,
 				0A83F5E91D1F352F0094B4A1 /* AppDelegate.swift */,
 				0A83F5EB1D1F352F0094B4A1 /* ViewController.swift */,
+				0AB274961D1F7CFB00C370E8 /* ChatLog.swift */,
 				0AB274941D1F380900C370E8 /* DigitalLight.swift */,
 				0A83F5ED1D1F352F0094B4A1 /* Main.storyboard */,
 				0A83F5F31D1F352F0094B4A1 /* Assets.xcassets */,
@@ -353,6 +356,7 @@
 				0A83F6411D1F361A0094B4A1 /* SocketIOClientStatus.swift in Sources */,
 				0A83F6421D1F361A0094B4A1 /* SocketLogger.swift in Sources */,
 				0A83F63B1D1F361A0094B4A1 /* SocketEngineSpec.swift in Sources */,
+				0AB274971D1F7CFB00C370E8 /* ChatLog.swift in Sources */,
 				0A83F6451D1F361A0094B4A1 /* SocketStringReader.swift in Sources */,
 				0A83F6441D1F361A0094B4A1 /* SocketParsable.swift in Sources */,
 				0A83F6461D1F361A0094B4A1 /* SocketTypes.swift in Sources */,
