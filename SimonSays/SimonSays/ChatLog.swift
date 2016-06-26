@@ -29,27 +29,35 @@ class ChatLog: UIScrollView, UIScrollViewDelegate {
     func addMessage(message : String, isLocal : Bool, isRecent : Bool) {
         let newMessage = ChatRecord(parent: self, message: message, isLocal: isLocal, darkColour: darkColour)
         
-        var bottomOffset = CGPoint(x: 0, y: self.contentSize.height - self.bounds.size.height - newMessage.frame.height)
-        self.setContentOffset(bottomOffset, animated: true)
+        //var bottomOffset = CGPoint(x: 0, y: self.contentSize.height - self.bounds.size.height - newMessage.frame.height)
+        //self.setContentOffset(bottomOffset, animated: true)
         
         self.addSubview(newMessage)
         messageQueue.insert(newMessage, atIndex: 0)
         
         arrangeMessages()
         
-        bottomOffset = CGPoint(x: 0, y: self.contentSize.height - self.bounds.size.height)
-        self.setContentOffset(bottomOffset, animated: true)
+        //bottomOffset = CGPoint(x: 0, y: self.contentSize.height - self.bounds.size.height)
+        //self.setContentOffset(bottomOffset, animated: true)
     }
     
     func arrangeMessages() {
         var runningHeight : CGFloat = self.frame.width * 0.02
         
         for i in messageQueue {
-            i.center = CGPoint(x: self.center.x, y: runningHeight + self.frame.height / 2)
             runningHeight += self.frame.width * 0.02 + i.frame.height
         }
         
         self.contentSize = CGSize(width: self.frame.width, height: runningHeight)
+        
+        runningHeight = self.frame.width * 0.02
+        
+        for i in messageQueue {
+            i.center = CGPoint(x: self.center.x, y: self.contentSize.height - runningHeight - self.frame.height / 2)
+            runningHeight += self.frame.width * 0.02 + i.frame.height
+        }
+        
+        
         
     }
     

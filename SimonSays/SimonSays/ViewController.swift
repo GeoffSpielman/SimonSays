@@ -125,6 +125,7 @@ class ViewController: UIViewController {
     func recieveSequence(recievedData : [Int]!) {
         
         if recievedData != self.lastRecievedSequence {
+            print("New sequence: " + String(recievedData))
             self.lastRecievedSequence = recievedData
             isPythonTurn = false
             self.level = recievedData.count

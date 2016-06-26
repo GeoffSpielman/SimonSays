@@ -31,7 +31,7 @@ class SocketIOManager: NSObject {
     }
     
     func sendSequence(message : String) {
-        socket.emit("sequencePhone", message)
+        socket.emit("sequencePhoneToServer", message)
     }
     
     func recieveMessage(type : String, message : String) {
@@ -40,12 +40,12 @@ class SocketIOManager: NSObject {
     
     func listenForSequence(completionHandler: (recievedData : [Int]!) -> Void) {
         
-        socket.on("time") { (dataArray, ack) -> Void in
+        socket.on("sequenceServerToPhone") { (dataArray, ack) -> Void in
             
             let messageArr = String(dataArray[0]).characters.split{$0 == ","}.map(String.init)
             
             
-            print(String(dataArray[0]))
+            //print(String("Recieved: " + String(dataArray)))
             
             var numberArr : [Int] = []
             
