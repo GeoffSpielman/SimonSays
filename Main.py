@@ -5,109 +5,117 @@
 import sys
 import time
 import serial
-ser = serial.Serial('/dev/ttyACM1', 9600, timeout=1)
+
+from socketIO_client import SocketIO, LoggingNamespace
+socketIO = SocketIO('https://simonserves2.herokuapp.com')
+
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 contentIsMessage = False
 arduinoTurn = False
 gameOver = False
-
-def IsAnInt(recString):
-    try:
-        int(recString)
-        return True
-    except ValueError:
-        return False
-
-#SET FROM SOCKET IO
-recMessage = "this is purely a message"
-recSequence = "3 2 1 0"
+rawSequence = "(u'[8, 8, 8, 8]',)"
+prevRawSequence = "(u'[8, 8, 8, 8]',)"
+newSequence = False
 
 
+def sequenceHasChanged(recstr):    
+    return (str(recstr) != str(prevRawSequence))
 
-if (contentIsMessage):
-    #Process message and send to Arduino
-    oString = "m " + recMessage + "|"
-    BA = bytearray()
-    BA.extend(map(ord, oString))
-    print(BA)
-    ser.write(BA)
-else:
-    #Process sequence and send to Arduino
-    oString = "s " + recSequence + "|"
-    seqLength = int((len(recSequence)+1) / 2)
-    BA = bytearray()
-    BA.extend(map(ord, oString))
-    print(BA)
-    ser.write(BA)
-    arduinoTurn = True
-
-
-
-
-##Waiting for sequence/messages from arduino
+def on_a_response(*args):
+    global newSequence 
+    #print('on_a_response', args)
+    #looks like {4,3,4,5}
+    print("I Received things")
+    global rawSequence
+    rawSequence = args
+    if (sequenceHasChanged(rawSequence) == True):
+        newSequence = True
+        print("Sequence has changed")
+        #prevRawSequence = rawSequence
+        global prevRawSequence
+        prevRawSequence = rawSequence
+        print(prevRawSequence)
+        print(rawSequence)
+    
+#Before the first message, the Pi keeps receiving (u'[8,8,8,8]')
+while (rawSequence == "(u'[8,8,8,8]')"):
+    socketIO.on("sequencePi", on_a_response)
+    socketIO.wait(seconds = 0.6)
+    socketIO.off("sequencePi")
+    
 while (gameOver == False):
-    if (ser.inWaiting() != 0):
-        recSequence = ser.readline().strip()
-        print(recSequence)
-        
-        seqString = recSequence.decode('utf-8')
-        print(seqString)
-        #for i in range(seqLength):
-        #    seqString[i] = str(recSequence[i])
-        #print(recSequence)
-        
-        #print(ser.inWaiting())
-    #Look for a message
-    #recData = ser.readline().strip()
-
-    #DATA IS A SEQUENCE
-    #if (IsAnInt(recData[0])):
-    #print("I received a sequence")
-
-    #Send any messages
+    socketIO.on("sequencePi", on_a_response)
+    socketIO.wait(seconds=0.4)
+    socketIO.off("sequencePi")
+    
+    if newSequence:
+        #SET FROM SERVER
+        recMessage = "this is purely a message"
+        recSequence = ""
 
 
+        if (contentIsMessage):
+            #Process message and send to Arduino
+            oString = "m " + recMessage + "|"
+            BA = bytearray()
+            BA.extend(map(ord, oString))
+            print(BA)
+            ser.write(BA)
+            
+        else:
+            #Process sequence and send to Arduino
+            rawSequence = str(rawSequence)
+            rawSequence = rawSequence.split('[')[1]
+            rawSequence = rawSequence.split(']')[0]    
+            
+            
+            rawArray = rawSequence.split(',')
+            for i in range (len(rawArray)):
+                recSequence += rawArray[i]
+            
+            #Now looks like "3 2 3 1 2 0"
+            oString = "s " + recSequence + "|"
+            seqLength = int((len(recSequence)+1) / 2)
+            BA = bytearray()
+            BA.extend(map(ord, oString))
+            print(BA)
+            ser.write(BA)
+            newSequence = False
+            arduinoTurn = True
 
-#stings and ints for storing left and right motor power
-##mLint = 0
-##mRint = 0
-##mL = ''
-##mR = ''
 
-###prepare for stop
-##Stp = '0,0!'
-##BAS=bytearray()
-##BAS.extend(map(ord, Stp))
-##
-##
-##
-##print('Type "stop" at any time to stop car')
-##print('To maintain levels, don\'t enter integer. Valid input: 0<int<255')
-##
-##while mL != 'stop' and mR != 'stop':
-##    mL = input('Set left motor power: ')
-##    if (mL.lower() != 'stop'):
-##        mR = str(input('Set right motor power: '))
-##    if (mL.lower() == 'stop' or mR.lower() == 'stop'): #immediately stop
-##        ser.write(BAS)
-##        sys.exit('Stopped')
-##    #if user entered text (button mash), maintain motor levels
-##    if IsAnInt(mL):
-##        mLint = int(mL)
-##        if mLint > 255:
-##            mLint = 255
-##        if mLint < 0:
-##            mLint = 0
-##    if IsAnInt(mR):
-##        mRint = int(mR)
-##        if mRint > 255:
-##            mRint = 255
-##        if mRint < 0:
-##            mRint = 0
-##
-##    print('\nCurrent Values - Left Motor: %d   Right Motor: %d' %(mLint, mRint))
-##    output = str(mLint) + ',' + str(mRint) + '!' #this is how arduino finds values
-##    BA = bytearray()
-##    BA.extend(map(ord, output))
-##    #print (BA)
-##    ser.write(BA)
+
+
+        ##Waiting for sequence/messages from arduino
+        while (arduinoTurn == True):
+            socketIO.on("sequencePi", on_a_response)
+            socketIO.wait(seconds=0.5)
+            socketIO.off("sequencePi")
+            print(ser.inWaiting)
+
+            
+
+            if (ser.inWaiting() != 0):
+                print("IN SER")
+                recSequence = ser.readline().strip()        
+                seqString = recSequence.decode('utf-8')
+                #seqString looks like "3210"
+                #print(seqString)
+                seqLength = len(seqString)
+                oString = "["
+                for i in range (seqLength - 1):
+                    oString += (seqString[i] + ",")
+                oString += (seqString[seqLength-1])
+                oString += "]"
+                #oString looks like "[3,2,1,0]"
+                print(oString)
+                socketIO.emit('sequencePi',oString)
+
+
+
+
+
+
+
+
 ser.close()
