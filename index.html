@@ -1,17 +1,14 @@
 <html>
   <body>
-    <p id='server-time'>default</p>
-    <script type="text/javascript" src="https://simonserves.herokuapp.com/socket.io/socket.io.js"></script>
+    <p id='server-time'></p>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-      var socket = io.connect('https://simonserves.herokuapp.com');
+      var socket = io();
       var el = document.getElementById('server-time');
-
-      socket.on('sequenceServerToPi', function(dataString) {
-        el.innerHTML = "|" + dataString + "|"
+      socket.on('sequenceServerToPi', function(timeString) {
+        el.innerHTML = 'Server time: ' + timeString;
       });
-        
-      socket.emit('sequencePiToServer, document.getElementById('textinput').value)
     </script>
-    <input id="textinput" type="text" name="textinput">
+      <input id="dataentry" type="text" name="firstname">
   </body>
 </html>
