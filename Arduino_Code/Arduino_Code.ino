@@ -17,10 +17,19 @@ Copyright (c) 2016 Geoff Spielman. All rights reserved.
  int led[] = {led0, led1, led2, led3};
 
  String recString = "";
- boolean newAvail = false;
+ boolean arduinoTurn = false;
  String recMessage = "";
+ boolean LEDon = false;
+ int seqIndex;
+ unsigned long timeOfLastChange;
+ int seqArr[100];
+ int seqSize;
+ boolean playerCreating = false;
+ boolean prevBtns[] = {false, false, false, false};
+ 
 
 void setup() {
+ timeOfLastChange = millis();
  Serial.begin(9600);
  pinMode(btn0, INPUT);
  pinMode(btn1, INPUT);
@@ -31,32 +40,111 @@ void setup() {
  pinMode(led2, OUTPUT);
  pinMode(led3, OUTPUT);
  recString.reserve(200);
+ //seqSize = 0;
+ seqIndex = 0;
  Serial.println("-----Start-----");
- 
 }
 
 void loop() {
+  
   // put your main code here, to run repeatedly:
-  for (int i = 0; i < 4; i ++) {
-    if (digitalRead(btn[i]) == 1) {
-      digitalWrite(led[i], HIGH);
-      //Serial.print("LED ");
-      //Serial.print(i);
-      //Serial.print(" on    ");
+  if (playerCreating)
+  {
+    for (int i = 0; i < 4; i ++) {
+      if (digitalRead(btn[i]) == 1) {
+        digitalWrite(led[i], HIGH);
+        //Serial.print("LED ");
+        //Serial.print(i);
+        //Serial.print(" on    ");
+      }
+      else {
+        digitalWrite(led[i], LOW);
+        //Serial.print("LED ");
+        //Serial.print(i);
+        //Serial.print(" off    ");
+      }    
     }
-    else {
-      digitalWrite(led[i], LOW);
-      //Serial.print("LED ");
-      //Serial.print(i);
-      //Serial.print(" off    ");
-    }
-      
   }
-  if (newAvail) {
-    //DO SOMETHING
-    recString = "";
-    newAvail = false;
+  
+  if (arduinoTurn) {
+    /*
+     Serial.println("ITS MY TURN!!");
+     Serial.print("seqIndex: ");
+     Serial.println(seqIndex);
+     Serial.print("seqSize: ");
+     Serial.println(seqSize);
+     */
+     
+     
+    //If sequence index is less than the length, we are still outputting the sequence
+    if((seqIndex < seqSize) && playerCreating == false){
+      //If an LED was on and change must be made
+      if (LEDon && (millis() - timeOfLastChange >= 1000))
+      {
+        digitalWrite(led[seqArr[seqIndex]], LOW);
+        LEDon = false;
+        seqIndex += 1;
+        if (seqIndex == seqSize)
+        {
+          playerCreating = true;
+          seqIndex = 0;
+          Serial.println("PLAYER, CREATE YOUR ENGINES");
+        }
+        timeOfLastChange = millis();        
+        
+      }
+      //LED is off and change must be made
+      else if (!LEDon && (millis() - timeOfLastChange >= 500))
+      {
+          Serial.print("Turning on LED ");
+          Serial.println(seqArr[seqIndex]);
+          
+          digitalWrite(led[seqArr[seqIndex]], HIGH);
+          LEDon = true;
+          timeOfLastChange = millis();
+      }
+      
+    }
+    else if (playerCreating && (seqIndex < seqSize))
+    {
+      //Check each button for change
+      for (int i = 0; i < 4; i ++)
+      {
+        if (!prevBtns[i] && digitalRead(btn[i]))
+        {
+          Serial.print("YOU'RE PRESSING BTN ");
+          Serial.println(i);
+          prevBtns[i] = true;
+        }
+        else if(prevBtns[i] && (digitalRead(btn[i]) == false))
+        {
+          prevBtns[i] = false;
+          seqArr[seqIndex] = i;
+          seqIndex += 1;
+          Serial.print("Added this button to sequence: ");
+          Serial.println(i);
+          if (seqIndex == seqSize)
+          {
+            Serial.println("YOU ARE DONE ENTERING. YOUR SEQUENCE:");
+            for (int i = 0; i < seqSize; i++)
+            {
+              Serial.println(seqArr[i]);
+            }
+            playerCreating = false;
+            //TAKE THIS OUT LATER
+            arduinoTurn = false;
+          }
+        }
+      }
+      
+    }
     
+    
+     
+    
+    
+    
+    //arduinoTurn = false;
   }
   /*
   Serial.println(" ");
@@ -79,13 +167,13 @@ void serialEvent()
   {  
     char inChar = (char)Serial.read();
     recString += inChar;
+    /*
     Serial.print("inChar: ");
     Serial.println(inChar);
+    */
     
     if (inChar == '|')
     {
-      Serial.print("Char at 0: ");
-      Serial.println(recString.charAt(0));
       int endIndex = recString.indexOf("|");
       if (endIndex == -1)
       {  
@@ -100,10 +188,9 @@ void serialEvent()
       //PROCESS SEQUENCE  
       }
       if (recString.charAt(0) == 's') {
-        Serial.println("I have received a sequence");
-        Serial.print("It contains this many digits: ");
-        int digits = (recString.length()-1)/2;
-        Serial.println(digits);
+        Serial.print("Received sequence containing this many digits: ");
+        seqSize = (recString.length()-1)/2;
+        Serial.println(seqSize);
         /*
         int* seq = new int[(recString.length()-1)/2];
         Serial.println(sizeof(*seq));
@@ -111,27 +198,34 @@ void serialEvent()
         {
         }
         */
-        int seqArr[digits];
-        for (int i = 2; i <= (digits*2); i += 2)
+        for (int i = 2; i <= (seqSize*2); i += 2)
         {
           seqArr[i/2 -1] = recString.charAt(i) - '0';
         }
-        /*Verify that you can actually create arrays of variable size
+        /*
+        Verify that you can actually create arrays of variable size
         Serial.print("Created array size: ");
         Serial.println(sizeof(seqArr) / sizeof(int));
-        */
+        
         //Test Sequence Array
         for (int i = 0; i < digits; i ++)
         {
           Serial.println(seqArr[i]);  
         }
-        
-        
-        
+        */
+        seqIndex = 0;
+        LEDon = false;
+        for (int i = 0; i < 4; i ++)
+          prevBtns[i] = false;
+        arduinoTurn = true;
       }
+      
+      
+      //Output sequence to user
+      
 
       
-      newAvail = true;
+      recString = "";
     }
   }
 }
