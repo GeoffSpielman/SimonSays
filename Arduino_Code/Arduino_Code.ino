@@ -112,6 +112,7 @@ void loop() {
         if (!prevBtns[i] && digitalRead(btn[i]))
         {
           prevBtns[i] = true;
+          delay(150);
         }
         else if(prevBtns[i] && (digitalRead(btn[i]) == false))
         {
@@ -129,7 +130,7 @@ void loop() {
             }
             if(correct)
             {
-              //PLAYER CORRECT, prepare for create phase
+              //PLAYER CORRECT,prepare for create phase
               //Simple display
               for (int o = 0; o < 3; o ++)
               {
@@ -155,7 +156,7 @@ void loop() {
                 delay(120);
               }
 
-              //REMOVE THIS LATER, JUST FOR TESTING
+              //REMOVE THIS FOR MESSAGES, JUST FOR TESTING SEQUENCES
               playerRepeating = false;
               playerCreating = true;
               seqIndex = 0;
