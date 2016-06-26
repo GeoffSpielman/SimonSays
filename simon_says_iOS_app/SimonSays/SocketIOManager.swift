@@ -16,7 +16,7 @@ class SocketIOManager: NSObject {
         super.init()
     }
     
-    var socket : SocketIOClient = SocketIOClient(socketURL: NSURL(string: "https://simonserves.herokuapp.com")!)
+    var socket : SocketIOClient = SocketIOClient(socketURL: NSURL(string: "https://simonserves2.herokuapp.com")!)
     
     func establishConnection() {
         socket.connect()
@@ -31,7 +31,7 @@ class SocketIOManager: NSObject {
     }
     
     func sendSequence(message : String) {
-        socket.emit("sequencePhoneToServer", message)
+        socket.emit("sequencePhone", message)
     }
     
     func recieveMessage(type : String, message : String) {
@@ -40,7 +40,7 @@ class SocketIOManager: NSObject {
     
     func listenForSequence(completionHandler: (recievedData : [Int]!) -> Void) {
         
-        socket.on("sequenceServerToPhone") { (dataArray, ack) -> Void in
+        socket.on("sequencePhone") { (dataArray, ack) -> Void in
             
             let messageArr = String(dataArray[0]).characters.split{$0 == ","}.map(String.init)
             
@@ -54,6 +54,8 @@ class SocketIOManager: NSObject {
                 
                 numberArr.append(Int(trimmedString)!)
             }
+            
+            print(String(numberArr))
             
             completionHandler(recievedData: numberArr)
             

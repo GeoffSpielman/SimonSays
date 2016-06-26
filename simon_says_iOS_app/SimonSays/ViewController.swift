@@ -16,6 +16,8 @@ class ViewController: UIViewController {
     
     var thereAreFourLights : [DigitalLight] = []
     
+    var status : Int! // 0 new game?, 1 Waiting for phone player guess, 2 phone player guessing, 3 wait for other player, 4 phone player input, 5 game over
+    
     var isPythonTurn : Bool!
     var gameOver : Bool!
     var lastRecievedSequence : [Int]!
@@ -44,6 +46,8 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        var status = 0
         
         self.isPythonTurn = false
         self.gameOver = false
@@ -113,29 +117,45 @@ class ViewController: UIViewController {
         }
         
         
-    
+        //SocketIOManager.sharedInstance.sendSequence(String([0, 1, 0, 3, 1]))
         
         
         
         SocketIOManager.sharedInstance.listenForSequence(recieveSequence)
         
+        //let _ = NSTimer.scheduledTimerWithTimeInterval(1.5, target: self, selector: #selector(self.playButtonFromQueue), userInfo: nil, repeats: false)
         
     }
     
+    var waitForPlayerTimer : NSTimer!
+    
     func recieveSequence(recievedData : [Int]!) {
+        
+        if recievedData == [4] {
+            changeStatus(6)
+            return
+        }
         
         if recievedData != self.lastRecievedSequence {
             print("New sequence: " + String(recievedData))
             self.lastRecievedSequence = recievedData
             isPythonTurn = false
             self.level = recievedData.count
-            let _ = NSTimer.scheduledTimerWithTimeInterval(1.5, target: self, selector: #selector(self.playButtonFromQueue), userInfo: nil, repeats: false)
+            changeStatus(1)
         }
         
     }
     
+    func startPlayback(){
+        changeStatus(2)
+        let _ = NSTimer.scheduledTimerWithTimeInterval(1.5, target: self, selector: #selector(self.playButtonFromQueue), userInfo: nil, repeats: false)
+    }
+    
     
     func playButtonFromQueue() {
+        
+        
+        
         if (self.level > self.currentBlinks) {
             
             thereAreFourLights[self.lastRecievedSequence[self.currentBlinks]].luxSit()
@@ -180,10 +200,13 @@ class ViewController: UIViewController {
                 self.nextSendOffArr = []
                 monitorInputTimer.invalidate()
                 self.monitorInputTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(self.monitorPlayerInput), userInfo: nil, repeats: true)
+                changeStatus(4)
             } else {
                 //fail
                 print("You failed!")
                 self.gameOver = true
+                changeStatus(5)
+                monitorInputTimer.invalidate()
             }
 
         }
@@ -197,6 +220,7 @@ class ViewController: UIViewController {
                 self.currentBlinks = self.currentBlinks - 1
                 nextSendOffArr.append(i)
                 print("Added: " + String(i))
+                textLabel.text = "Correct! Choose your own sequence: " + String(self.currentBlinks)
             }
             else if currentPresses[i] == false && monitorInputPress[i] == true {
                 monitorInputPress[i] = false
@@ -204,6 +228,7 @@ class ViewController: UIViewController {
         }
         
         if self.currentBlinks == 0 {
+            changeStatus(3)
             SocketIOManager.sharedInstance.sendSequence(String(nextSendOffArr))
             print("Added arr: " + String(nextSendOffArr))
             monitorInputTimer.invalidate()
@@ -241,6 +266,135 @@ class ViewController: UIViewController {
         }
         
     }
+    
+    var textLabel : UILabel!
+    var userButton : UIButton!
+    
+    func changeStatus(newStatus : Int) {
+        self.status = newStatus
+        
+        for view in self.dataPacket.subviews {
+            view.removeFromSuperview()
+        }
+        
+        switch newStatus {
+        case 1:
+            
+            textLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.01, y: 0, width: self.dataPacket.frame.width * 0.735, height: self.dataPacket.frame.height * 0.8))
+            textLabel.center = CGPoint(x: textLabel.center.x, y: self.dataPacket.frame.height / 2)
+            textLabel.backgroundColor = lightColour
+            dataPacket.addSubview(textLabel)
+            
+            textLabel.textColor = UIColor.whiteColor()
+            textLabel.text = "Other player has responded"
+            textLabel.textAlignment = .Center
+            
+            userButton = UIButton(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            userButton.center = CGPoint(x: userButton.center.x, y: self.dataPacket.frame.height / 2)
+            userButton.backgroundColor = mostlyDarkColour
+            userButton.layer.cornerRadius = textField.frame.height / 4
+            userButton.addTarget(self, action: #selector(self.startPlayback), forControlEvents: UIControlEvents.TouchDown)
+            
+            dataPacket.addSubview(userButton)
+            
+            var buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            buttonLabel.center = CGPoint(x: buttonLabel.center.x, y: self.dataPacket.frame.height / 2)
+            buttonLabel.text = "Start"
+            buttonLabel.textColor = UIColor.whiteColor()
+            buttonLabel.textAlignment = .Center
+            dataPacket.addSubview(buttonLabel)
+            
+            
+        case 2:
+            textLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.01, y: 0, width: self.dataPacket.frame.width * 0.98, height: self.dataPacket.frame.height * 0.8))
+            textLabel.center = CGPoint(x: textLabel.center.x, y: self.dataPacket.frame.height / 2)
+            textLabel.backgroundColor = lightColour
+            dataPacket.addSubview(textLabel)
+            
+            textLabel.textColor = UIColor.whiteColor()
+            textLabel.text = "Watch the lights carefully!"
+            textLabel.textAlignment = .Center
+        case 3:
+            textLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.01, y: 0, width: self.dataPacket.frame.width * 0.98, height: self.dataPacket.frame.height * 0.8))
+            textLabel.center = CGPoint(x: textLabel.center.x, y: self.dataPacket.frame.height / 2)
+            textLabel.backgroundColor = lightColour
+            dataPacket.addSubview(textLabel)
+            
+            textLabel.textColor = UIColor.whiteColor()
+            textLabel.text = "Waiting for other player..."
+            textLabel.textAlignment = .Center
+        case 4:
+            textLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.01, y: 0, width: self.dataPacket.frame.width * 0.98, height: self.dataPacket.frame.height * 0.8))
+            textLabel.center = CGPoint(x: textLabel.center.x, y: self.dataPacket.frame.height / 2)
+            textLabel.backgroundColor = lightColour
+            dataPacket.addSubview(textLabel)
+            
+            textLabel.textColor = UIColor.whiteColor()
+            textLabel.text = "Correct! Choose your own sequence: " + String(self.level)
+            textLabel.textAlignment = .Center
+        case 5:
+            SocketIOManager.sharedInstance.sendSequence(String([8,8,8,8]))
+            
+            textLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.01, y: 0, width: self.dataPacket.frame.width * 0.735, height: self.dataPacket.frame.height * 0.8))
+            textLabel.center = CGPoint(x: textLabel.center.x, y: self.dataPacket.frame.height / 2)
+            textLabel.backgroundColor = lightColour
+            dataPacket.addSubview(textLabel)
+            
+            textLabel.textColor = UIColor.whiteColor()
+            textLabel.text = "You failed! Game over, man!"
+            textLabel.textAlignment = .Center
+            
+            userButton = UIButton(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            userButton.center = CGPoint(x: userButton.center.x, y: self.dataPacket.frame.height / 2)
+            userButton.backgroundColor = mostlyDarkColour
+            userButton.layer.cornerRadius = textField.frame.height / 4
+            userButton.addTarget(self, action: #selector(self.restartGame), forControlEvents: UIControlEvents.TouchDown)
+            
+            dataPacket.addSubview(userButton)
+            
+            var buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            buttonLabel.center = CGPoint(x: buttonLabel.center.x, y: self.dataPacket.frame.height / 2)
+            buttonLabel.text = "Restart"
+            buttonLabel.textColor = UIColor.whiteColor()
+            buttonLabel.textAlignment = .Center
+            dataPacket.addSubview(buttonLabel)
+        case 6:
+            SocketIOManager.sharedInstance.sendSequence(String([8,8,8,8]))
+            
+            textLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.01, y: 0, width: self.dataPacket.frame.width * 0.735, height: self.dataPacket.frame.height * 0.8))
+            textLabel.center = CGPoint(x: textLabel.center.x, y: self.dataPacket.frame.height / 2)
+            textLabel.backgroundColor = lightColour
+            dataPacket.addSubview(textLabel)
+            
+            textLabel.textColor = UIColor.whiteColor()
+            textLabel.text = "You win! Well done!"
+            textLabel.textAlignment = .Center
+            
+            userButton = UIButton(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            userButton.center = CGPoint(x: userButton.center.x, y: self.dataPacket.frame.height / 2)
+            userButton.backgroundColor = mostlyDarkColour
+            userButton.layer.cornerRadius = textField.frame.height / 4
+            userButton.addTarget(self, action: #selector(self.restartGame), forControlEvents: UIControlEvents.TouchDown)
+            
+            dataPacket.addSubview(userButton)
+            
+            var buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            buttonLabel.center = CGPoint(x: buttonLabel.center.x, y: self.dataPacket.frame.height / 2)
+            buttonLabel.text = "Restart"
+            buttonLabel.textColor = UIColor.whiteColor()
+            buttonLabel.textAlignment = .Center
+            dataPacket.addSubview(buttonLabel)
+        default:
+            break
+        }
+    }
+    
+    func restartGame() {
+        self.level = 4
+        self.changeStatus(4)
+        monitorPlayerInput()
+    }
+    
 
 
     override func didReceiveMemoryWarning() {
