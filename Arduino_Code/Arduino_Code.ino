@@ -42,27 +42,20 @@ void setup() {
  pinMode(led2, OUTPUT);
  pinMode(led3, OUTPUT);
  recString.reserve(200);
- //seqSize = 0;
  seqIndex = 0;
 }
 
 void loop() {
-  
-  // put your main code here, to run repeatedly:
+
   if (playerCreating || playerRepeating)
   {
+    'if button is pressed, turn on LED
     for (int i = 0; i < 4; i ++) {
       if (digitalRead(btn[i]) == 1) {
         digitalWrite(led[i], HIGH);
-        //Serial.print("LED ");
-        //Serial.print(i);
-        //Serial.print(" on    ");
       }
       else {
         digitalWrite(led[i], LOW);
-        //Serial.print("LED ");
-        //Serial.print(i);
-        //Serial.print(" off    ");
       }    
     }
   }
@@ -78,7 +71,8 @@ void loop() {
      
      
     //If sequence index is less than the length, we are still outputting the sequence
-    if((seqIndex < seqSize) && playerRepeating == false && playerCreating == false){
+    if((seqIndex < seqSize) && playerRepeating == false && playerCreating == false)
+    {
       //If an LED was on and change must be made
       if (LEDon && (millis() - timeOfLastChange >= 1000))
       {
@@ -109,17 +103,18 @@ void loop() {
       //Check each button for change
       for (int i = 0; i < 4; i ++)
       {
+        'if the button wasn't pressed previously and is now
         if (!prevBtns[i] && digitalRead(btn[i]))
         {
           prevBtns[i] = true;
           delay(150);
         }
-        else if(prevBtns[i] && (digitalRead(btn[i]) == false))
+        else if(prevBtns[i] && !digitalRead(btn[i]))
         {
           prevBtns[i] = false;
           repeatArr[seqIndex] = i;
           seqIndex += 1;
-          //Check user for correctness
+          //Check user for correctness once the entire sequence has been entered
           if (seqIndex == seqSize)
           {
             boolean correct = true;
