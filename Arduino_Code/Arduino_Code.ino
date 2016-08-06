@@ -2,20 +2,25 @@
 Created by Geoff Spielman on 2016-06-25.
 Copyright (c) 2016 Geoff Spielman. All rights reserved.
 */
+const int btn0 = 2;
+const int btn1 = 7;
+const int btn2 = 12;
+const int btn3 = 8;
+const int led0 = 5;
+const int led1 = 3;
+const int led2 = 4;
+const int led3 = 10;
 
- // put your setup code here, to run once:
-  const int btn0 = 2;
-  const int btn1 = 7;
-  const int btn2 = 12;
-  const int btn3 = 8;
-  const int led0 = 5;
-  const int led1 = 3;
-  const int led2 = 4;
-  const int led3 = 10;
+int btn[] = {btn0, btn1, btn2, btn3};
+int led[] = {led0, led1, led2, led3};
 
- int btn[] = {btn0, btn1, btn2, btn3};
- int led[] = {led0, led1, led2, led3};
+//debouncing purposes
+long prevChangeTime[] = {millis(), millis(), millis(), millis()};
+int prevButtonState[] = {0,0,0,0};
+long debounceTime = 50;
 
+
+/*
  String recString = "";
  boolean arduinoTurn = false;
  String recMessage = "";
@@ -28,10 +33,10 @@ Copyright (c) 2016 Geoff Spielman. All rights reserved.
  boolean playerRepeating = false;
  boolean playerCreating = false;
  boolean prevBtns[] = {false, false, false, false};
- 
+*/
 
 void setup() {
- timeOfLastChange = millis();
+ //timeOfLastChange = millis();
  Serial.begin(9600);
  pinMode(btn0, INPUT);
  pinMode(btn1, INPUT);
@@ -41,12 +46,61 @@ void setup() {
  pinMode(led1, OUTPUT);
  pinMode(led2, OUTPUT);
  pinMode(led3, OUTPUT);
- recString.reserve(200);
- seqIndex = 0;
+ //recString.reserve(200);
+ //seqIndex = 0;
 }
 
 void loop() {
 
+for (int i = 0; i < 4; i ++)
+{
+
+  Serial.print("Btn 0: ");
+  Serial.print(digitalRead(btn[0]));
+  Serial.print("    Btn 1: ");
+  Serial.print(digitalRead(btn[1]));
+  Serial.print("    Btn 2: ");
+  Serial.print(digitalRead(btn[2]));
+  Serial.print("    Btn 3: ");
+  Serial.println(digitalRead(btn[3]));
+  
+  //just incase something changes while executing (very unlikely, but I just read it once
+  int cur = digitalRead(btn[i]);
+  
+  //just saves the time of last change
+  if (cur != prevButtonState[i])
+    prevChangeTime[i] = millis();
+
+  //if enough time has passed that the button is being held down or has been released (intended state)
+  if ((millis() - prevChangeTime[i]) > debounceTime)
+  {
+    if (cur != prevButtonState[i])
+    {
+      prevButtonState[i] = cur;
+      //now that the new state has been officially changed, make appropriate change
+      if (cur)
+      {
+        //button pressed down
+        Serial.println("down");
+        digitalWrite(led[0], HIGH);
+        digitalWrite(led[1], LOW);
+      }
+      else {
+        //button released
+        Serial.println("up");
+        digitalWrite(led[0], LOW);
+        digitalWrite(led[1], HIGH);
+      }
+    }
+  }
+}
+
+
+
+
+
+/*
+  'all this does is read all the buttons and light them up when pressed
   if (playerCreating || playerRepeating)
   {
     'if button is pressed, turn on LED
@@ -68,6 +122,7 @@ void loop() {
      Serial.print("seqSize: ");
      Serial.println(seqSize);
      */
+     /*
      
      
     //If sequence index is less than the length, we are still outputting the sequence
@@ -219,8 +274,11 @@ void loop() {
   Serial.println(" ");
   */
 
+  
+
 }
 
+/*
 void serialEvent()
 {
   while (Serial.available())
@@ -231,7 +289,7 @@ void serialEvent()
     Serial.print("inChar: ");
     Serial.println(inChar);
     */
-    
+    /*
     if (inChar == '|')
     {
       int endIndex = recString.indexOf("|");
@@ -256,6 +314,7 @@ void serialEvent()
         {
         }
         */
+        /*
         for (int i = 2; i <= (seqSize*2); i += 2)
         {
           seqArr[i/2 -1] = recString.charAt(i) - '0';
@@ -271,6 +330,7 @@ void serialEvent()
           Serial.println(seqArr[i]);  
         }
         */
+        /*
         seqIndex = 0;
         LEDon = false;
         for (int i = 0; i < 4; i ++)
