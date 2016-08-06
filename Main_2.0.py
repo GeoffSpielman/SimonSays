@@ -37,7 +37,7 @@ exitFlag = 0
 def on_a_response(*args):
     print(args)
 
-class countThread (threading.Thread):
+class countThread(threading.Thread):
     def __init__(self, name, interval):
         threading.Thread.__init__(self)
         self.name = name
@@ -45,14 +45,14 @@ class countThread (threading.Thread):
         self.count = 0
     def run(self):
         while(True):
-            self.count++
+            self.count += 1
             print(self.count)
             time.sleep(self.interval)
 
 
 
 
-class socketThread (threading.Thread):
+class socketThread(threading.Thread):
     def __init__(self, name, tag):
         threading.Thread.__init__(self)
         self.name = name
@@ -64,8 +64,8 @@ class socketThread (threading.Thread):
 
 
 # Create new threads
-thread1 = countThread.Thread("simpleCounter", 0.2)
-thread2 = socketThread.("socketIOThread", "sequencePi")
+thread1 = countThread("simpleCounter", 0.2)
+thread2 = socketThread("socketIOThread", "sequencePi")
 
 # Start new Threads
 thread1.start()
