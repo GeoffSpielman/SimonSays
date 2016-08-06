@@ -24,8 +24,6 @@
 
 
 
-from socketIO_client import SocketIO, LoggingNamespace
-socketIO = SocketIO('willclark.io:1642')
 
 
 import threading
@@ -33,6 +31,10 @@ import time
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(4, GPIO.OUT)
+
+
+from socketIO_client import SocketIO, LoggingNamespace
+socketIO = SocketIO('willclark.io:1642')
 
 ledOn = False
 
