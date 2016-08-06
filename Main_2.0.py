@@ -18,33 +18,54 @@
 #write morse pin
     #spew what ever is on the queue
 
+
+
+
+
+
+from socketIO_client import SocketIO, LoggingNamespace
+socketIO = SocketIO('willclark.io:1642')
+
+
+#Threading from http://www.tutorialspoint.com/python3/python_multithreading.htm
 import threading
 import time
 
 exitFlag = 0
 
-class myThread (threading.Thread):
-    def __init__(self, threadID, name, counter):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.name = name
-        self.counter = counter
-    def run(self):
-        print ("Starting " + self.name)
-        print_time(self.name, self.counter, 5)
-        print ("Exiting " + self.name)
 
-def print_time(threadName, delay, counter):
-    while counter:
-        if exitFlag:
-            threadName.exit()
-        time.sleep(delay)
-        print ("%s: %s" % (threadName, time.ctime(time.time())))
-        counter -= 1
+def on_a_response(*args):
+    print(args)
+
+class countThread (threading.Thread):
+    def __init__(self, name, interval):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.interval = interval
+        self.count = 0
+    def run(self):
+        while(True):
+            self.count++
+            print(self.count)
+            time.sleep(self.interval)
+
+
+
+
+class socketThread (threading.Thread):
+    def __init__(self, name, tag):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.tag = tag
+    def run(self):
+        socketIO.on("sequencePi", on_a_response)
+        socketIO.wait(seconds=2)
+        socketIO.off("sequencePi")
+
 
 # Create new threads
-thread1 = myThread(1, "Thread-1", 1)
-thread2 = myThread(2, "Thread-2", 2)
+thread1 = countThread.Thread("simpleCounter", 0.2)
+thread2 = socketThread.("socketIOThread", "sequencePi")
 
 # Start new Threads
 thread1.start()
