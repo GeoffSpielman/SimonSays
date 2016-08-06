@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #Created by Will Clark & Geoff Spielman on 2016-06-25.
 #Copyright (c) 2016 Will Clark & Geoff Spielman. All rights reserved.
+#Threading from http://www.tutorialspoint.com/python3/python_multithreading.htm
 
 #When program starts
     #pin modes
@@ -27,15 +28,25 @@ from socketIO_client import SocketIO, LoggingNamespace
 socketIO = SocketIO('willclark.io:1642')
 
 
-#Threading from http://www.tutorialspoint.com/python3/python_multithreading.htm
 import threading
 import time
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(4, GPIO.OUT)
+
+ledOn = False
 
 exitFlag = 0
 
 
 def on_a_response(*args):
     print(args)
+    if (ledOn):
+        GPIO.output(4, HIGH)
+        ledOn = False
+    else:
+        GPIO.output(4, LOW)
+        ledOn = True
 
 class countThread(threading.Thread):
     def __init__(self, name, interval):
@@ -59,7 +70,7 @@ class socketThread(threading.Thread):
         self.tag = tag
     def run(self):
         socketIO.on("sequencePi", on_a_response)
-        socketIO.wait(seconds=2)
+        socketIO.wait(seconds=20)
         socketIO.off("sequencePi")
 
 
