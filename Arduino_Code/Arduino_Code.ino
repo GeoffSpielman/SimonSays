@@ -20,17 +20,25 @@ int prevButtonState[] = {0,0,0,0};
 int buttonState[] = {0,0,0,0};
 unsigned long debounceTime = 50;
 
+int seqIndex;
+int seqSize;
+
+
+boolean displayingSequence = false;
+boolean repeatingSequence = false;
+boolean creatingSequence = false;
+
 
 /*
  String recString = "";
  boolean arduinoTurn = false;
  String recMessage = "";
  boolean LEDon = false;
- int seqIndex;
+ 
  unsigned long timeOfLastChange;
  int seqArr[100];
  int repeatArr[100];
- int seqSize;
+
  boolean playerRepeating = false;
  boolean playerCreating = false;
  boolean prevBtns[] = {false, false, false, false};
@@ -101,6 +109,76 @@ for (int i = 0; i < 4; i ++)
   }
   prevButtonState[i] = cur;
 }
+
+//expect morse code to start with . or - and sequences are in the form 12031021, BOTH END WITH |
+void serialEvent()
+{
+  while (Serial.available())
+  {  
+    char inChar = (char)Serial.read();
+    recString += inChar;
+    
+    if (inChar == '|')
+    {
+      int endIndex = recString.indexOf("|");
+      /*
+      if (endIndex == -1)
+      {  
+        endIndex = recString.indexOf("/n");
+      }
+      */
+      
+      //PROCESS MESSAGE
+      if (recString.charAt(0) == '.' || recString.charAt(0) == '-' {
+        recMessage= recString.substring(2, endIndex);
+        Serial.print("Received Message:");
+        Serial.println(recMessage);
+        
+      //PROCESS SEQUENCE  
+      }
+      if (recString.charAt(0) == 's') {
+        seqSize = (recString.length()-1)/2;
+        /*
+        int* seq = new int[(recString.length()-1)/2];
+        Serial.println(sizeof(*seq));
+        for (int i = 2; i < recString.length(); i++)
+        {
+        }
+        */
+        /*
+        for (int i = 2; i <= (seqSize*2); i += 2)
+        {
+          seqArr[i/2 -1] = recString.charAt(i) - '0';
+        }
+        /*
+        Verify that you can actually create arrays of variable size
+        Serial.print("Created array size: ");
+        Serial.println(sizeof(seqArr) / sizeof(int));
+        
+        //Test Sequence Array
+        for (int i = 0; i < digits; i ++)
+        {
+          Serial.println(seqArr[i]);  
+        }
+        */
+        /*
+        seqIndex = 0;
+        LEDon = false;
+        for (int i = 0; i < 4; i ++)
+          prevBtns[i] = false;
+        arduinoTurn = true;
+      }
+      
+      
+      //Output sequence to user
+      
+
+      
+      recString = "";
+    }
+  }
+}
+
 
 
 
