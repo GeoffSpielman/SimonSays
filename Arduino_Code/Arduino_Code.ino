@@ -20,17 +20,40 @@ int prevButtonState[] = {0,0,0,0};
 int buttonState[] = {0,0,0,0};
 unsigned long debounceTime = 50;
 
-int seqIndex;
-int seqSize;
+int seqIndex = 0;
+int seqLength = 0;
+String recString = "";
+//since dynamic arrays are not advised in Arduino, it is unlikely the user will get past 50
+int seqArr[50];
+int btnLog[50];
+int btnLogIndex = 0;
 
 
+
+//Status trackers
 boolean displayingSequence = false;
 boolean repeatingSequence = false;
+boolean displayResultAnimation = false;
 boolean creatingSequence = false;
+boolean listeningToButtons = false;
+boolean playerWasCorrect = true;
+
+//customizable display, just set indexes appropriately in displayResultAnimation
+int animationArr[] = {0,1,2,3,0,1,2,3,0,1,2,3,0,-1,0,-1,0,-1,0};
+int animationIndex = -1;
+int endI;
+const int animationLEDonDuration = 300;
+const int animationLEDoffDuration = 100;
+
+//for tweaking how sequence it output to user
+const int LEDonDuration = 1000;
+const int LEDoffDuration = 500;
+unsigned long timeLEDlastChanged = 0;
+boolean LEDon = false;
 
 
 /*
- String recString = "";
+ 
  boolean arduinoTurn = false;
  String recMessage = "";
  boolean LEDon = false;
@@ -55,60 +78,173 @@ void setup() {
  pinMode(led1, OUTPUT);
  pinMode(led2, OUTPUT);
  pinMode(led3, OUTPUT);
- 
- //timeOfLastChange = millis();
- //recString.reserve(200);
- //seqIndex = 0;
+ recString.reserve(400);
 }
+
 
 void loop() {
 
-for (int i = 0; i < 4; i ++)
-{  
-  //just incase something changes while executing (very unlikely, but I just read it once
-  int cur = digitalRead(btn[i]);
-  /*
-  Serial.print("\tBtn");
-  Serial.print(i);
-  Serial.print(": ");
-  Serial.print(cur);
-  Serial.print(" (");
-  Serial.print(prevButtonState[i]);
-  Serial.print(")");
-  Serial.print(prevChangeTime[i]);
-  Serial.print("--");
-  Serial.print(millis() - prevChangeTime[i]);
-  */
-  
-  //just saves the time of last change
-  if (cur != prevButtonState[i])
+  if(displayingSequence)
   {
-    prevChangeTime[i] = millis();
+    //if an LED has been on and it's time to turn it off
+    if(LEDon && (millis() - timeLEDlastChanged >= LEDonDuration))
+    {
+      digitalWrite(led[seqArr[seqIndex]], LOW);
+      LEDon = false;
+      seqIndex ++;
+
+      //if the entire sequence has been output
+      if(seqIndex == seqLength)
+      {
+        displayingSequence = false;
+        repeatingSequence = true;
+        listeningToButtons = true;
+        seqIndex = 0;
+      }
+      timeLEDlastChanged = millis();
+    }
+
+    //if the last LED was off and it's time to turn the next one on
+    else if (!LEDon && (millis() - timeLEDlastChanged >= LEDoffDuration))
+    {
+      digitalWrite(led[seqArr[seqIndex]], HIGH);
+      LEDon = true;
+      timeLEDlastChanged = millis();
+    }
+    
+  }
+  
+  if(repeatingSequence)
+  {
+    //see if the user is done pressing buttons
+    if(btnLogIndex == seqLength)
+    {      
+      //now check if correct answer was written
+      //I am an optimist
+      playerWasCorrect = true;
+      for (int i  = 0; i < seqLength; i ++)
+      {
+        if(btnLog[i] != seqArr[i])
+        {
+          playerWasCorrect = false;
+          break;
+        }
+      }
+      displayResultAnimation = true;
+      listeningToButtons = false;
+      repeatingSequence = false;
+      //clear button log
+      for (int i = 0; i < seqLength; i ++)
+          btnLog[i] = -1;
+      btnLogIndex = 0;
+      animationIndex = 0;
+      LEDon = false;
+      animationIndex = -1;
+    }
+    
   }
 
-  //if enough time has passed that the button is being held down or has been released (intended state)
-  if ((millis() - prevChangeTime[i]) > debounceTime)
+  if(displayResultAnimation)
   {
-    if (cur != buttonState[i])
+    if (animationIndex == -1)
     {
-      buttonState[i] = cur;
-     
-      //now that the new state has been officially changed, make appropriate change
-      if (cur)
+      //can't use delays or they will interfere with morse code output
+      if (playerWasCorrect)
       {
-        //button pressed down
-        digitalWrite(led[0], HIGH);
-        digitalWrite(led[1], LOW);
+        animationIndex = 0;
+        endI = 11;
+        Serial.println("player was correct");
       }
       else {
-        //button released
-        digitalWrite(led[0], LOW);
-        digitalWrite(led[1], HIGH);
+        animationIndex = 12;
+        endI = 18;
+        Serial.println("player was wrong");
       }
     }
+
+    Serial.print(LEDon);
+    Serial.print("   ");
+    Serial.print(millis());
+    Serial.print("   ");
+    Serial.print(timeLEDlastChanged);
+    Serial.print("   ");
+    Serial.print(animationIndex);
+    Serial.print("   ");
+    Serial.println(animationArr[animationIndex]);
+    
+    
+
+    //if an LED has been on and it's time to turn it off
+    if(LEDon && (millis() - timeLEDlastChanged >= animationLEDonDuration))
+    {
+      digitalWrite(led[animationArr[animationIndex]], LOW);
+      LEDon = false;
+      animationIndex ++;
+
+      //if the entire sequence has been output
+      if(animationIndex == (endI + 1))
+      {
+        displayResultAnimation = false;
+        creatingSequence = true;
+        listeningToButtons = true;
+        seqIndex = 0;
+      }
+      timeLEDlastChanged = millis();
+      Serial.println("Off");
+    }
+
+    //if the last LED was off and it's time to turn the next one on
+    else if (!LEDon && (millis() - timeLEDlastChanged >= animationLEDoffDuration))
+    {
+      digitalWrite(led[animationArr[animationIndex]], HIGH);
+      LEDon = true;
+      timeLEDlastChanged = millis();
+      Serial.println("ON");
+    }
   }
-  prevButtonState[i] = cur;
-}
+  
+  if(creatingSequence)
+  {
+    
+  }
+
+  if (listeningToButtons)
+  {
+    for (int i = 0; i < 4; i ++)
+    {
+      int cur = digitalRead(btn[i]);
+    
+      //just saves the time of last change
+      if (cur != prevButtonState[i])
+        prevChangeTime[i] = millis();
+    
+      //if enough time has passed that the button is being held down or has been released (intended state)
+      if ((millis() - prevChangeTime[i]) > debounceTime)
+      {
+        if (cur != buttonState[i])
+        {
+          buttonState[i] = cur;
+         
+          //now that the new state has been officially changed, make appropriate change
+          if (cur)
+          {
+            btnLog[btnLogIndex] = i;
+            btnLogIndex ++;
+            digitalWrite(led[i], HIGH);
+          }
+          else {
+            //button released
+            digitalWrite(led[i], LOW);
+          }
+        }
+      }
+    prevButtonState[i] = cur;
+    }
+  }
+
+}//end loop
+
+
 
 //expect morse code to start with . or - and sequences are in the form 12031021, BOTH END WITH |
 void serialEvent()
@@ -121,60 +257,35 @@ void serialEvent()
     if (inChar == '|')
     {
       int endIndex = recString.indexOf("|");
-      /*
-      if (endIndex == -1)
-      {  
-        endIndex = recString.indexOf("/n");
-      }
-      */
-      
-      //PROCESS MESSAGE
-      if (recString.charAt(0) == '.' || recString.charAt(0) == '-' {
-        recMessage= recString.substring(2, endIndex);
-        Serial.print("Received Message:");
-        Serial.println(recMessage);
-        
-      //PROCESS SEQUENCE  
-      }
-      if (recString.charAt(0) == 's') {
-        seqSize = (recString.length()-1)/2;
-        /*
-        int* seq = new int[(recString.length()-1)/2];
-        Serial.println(sizeof(*seq));
-        for (int i = 2; i < recString.length(); i++)
-        {
-        }
-        */
-        /*
-        for (int i = 2; i <= (seqSize*2); i += 2)
-        {
-          seqArr[i/2 -1] = recString.charAt(i) - '0';
-        }
-        /*
-        Verify that you can actually create arrays of variable size
-        Serial.print("Created array size: ");
-        Serial.println(sizeof(seqArr) / sizeof(int));
-        
-        //Test Sequence Array
-        for (int i = 0; i < digits; i ++)
-        {
-          Serial.println(seqArr[i]);  
-        }
-        */
-        /*
-        seqIndex = 0;
-        LEDon = false;
-        for (int i = 0; i < 4; i ++)
-          prevBtns[i] = false;
-        arduinoTurn = true;
-      }
-      
-      
-      //Output sequence to user
-      
+      //start index = inclusive, end index = exlusive (this removes pipe)
+      recString = recString.substring(0, endIndex);
 
       
+      //PROCESS MORSE CODE
+      if (recString.charAt(0) == '.' || recString.charAt(0) == '-') 
+      {
+        //Add to Queue
+      }
+   
+      //PROCESS SEQUENCE  
+      else 
+      {      
+        for (int i = 0; i < recString.length(); i ++)
+        {
+          seqArr[i] = recString.charAt(i) - '0';
+        } 
+       
+        seqIndex = 0;
+        seqLength = recString.length();
+        displayingSequence = true;
+        //erase as much of the button log as required to enter the correct sequence
+        for (int i = 0; i < seqLength; i ++)
+          btnLog[i] = -1;
+        btnLogIndex = 0;
+      }
+           
       recString = "";
+      endIndex = -1;
     }
   }
 }
@@ -359,9 +470,6 @@ void serialEvent()
   Serial.println(" ");
   */
 
-  
-
-}
 
 /*
 void serialEvent()
