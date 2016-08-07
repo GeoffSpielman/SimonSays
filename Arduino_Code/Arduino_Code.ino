@@ -3,21 +3,22 @@ Created by Geoff Spielman on 2016-06-25.
 Copyright (c) 2016 Geoff Spielman. All rights reserved.
 */
 const int btn0 = 2;
-const int btn1 = 7;
-const int btn2 = 12;
-const int btn3 = 8;
-const int led0 = 5;
-const int led1 = 3;
-const int led2 = 4;
-const int led3 = 10;
+const int btn1 = 3;
+const int btn2 = 4;
+const int btn3 = 5;
+const int led0 = 8;
+const int led1 = 9;
+const int led2 = 10;
+const int led3 = 11;
 
 int btn[] = {btn0, btn1, btn2, btn3};
 int led[] = {led0, led1, led2, led3};
 
 //debouncing purposes
-long prevChangeTime[] = {millis(), millis(), millis(), millis()};
+unsigned long prevChangeTime[] = {0, 0, 0, 0};
 int prevButtonState[] = {0,0,0,0};
-long debounceTime = 50;
+int buttonState[] = {0,0,0,0};
+unsigned long debounceTime = 50;
 
 
 /*
@@ -36,7 +37,7 @@ long debounceTime = 50;
 */
 
 void setup() {
- //timeOfLastChange = millis();
+ 
  Serial.begin(9600);
  pinMode(btn0, INPUT);
  pinMode(btn1, INPUT);
@@ -46,6 +47,8 @@ void setup() {
  pinMode(led1, OUTPUT);
  pinMode(led2, OUTPUT);
  pinMode(led3, OUTPUT);
+ 
+ //timeOfLastChange = millis();
  //recString.reserve(200);
  //seqIndex = 0;
 }
@@ -53,46 +56,50 @@ void setup() {
 void loop() {
 
 for (int i = 0; i < 4; i ++)
-{
-
-  Serial.print("Btn 0: ");
-  Serial.print(digitalRead(btn[0]));
-  Serial.print("    Btn 1: ");
-  Serial.print(digitalRead(btn[1]));
-  Serial.print("    Btn 2: ");
-  Serial.print(digitalRead(btn[2]));
-  Serial.print("    Btn 3: ");
-  Serial.println(digitalRead(btn[3]));
-  
+{  
   //just incase something changes while executing (very unlikely, but I just read it once
   int cur = digitalRead(btn[i]);
+  /*
+  Serial.print("\tBtn");
+  Serial.print(i);
+  Serial.print(": ");
+  Serial.print(cur);
+  Serial.print(" (");
+  Serial.print(prevButtonState[i]);
+  Serial.print(")");
+  Serial.print(prevChangeTime[i]);
+  Serial.print("--");
+  Serial.print(millis() - prevChangeTime[i]);
+  */
   
   //just saves the time of last change
   if (cur != prevButtonState[i])
+  {
     prevChangeTime[i] = millis();
+  }
 
   //if enough time has passed that the button is being held down or has been released (intended state)
   if ((millis() - prevChangeTime[i]) > debounceTime)
   {
-    if (cur != prevButtonState[i])
+    if (cur != buttonState[i])
     {
-      prevButtonState[i] = cur;
+      buttonState[i] = cur;
+     
       //now that the new state has been officially changed, make appropriate change
       if (cur)
       {
         //button pressed down
-        Serial.println("down");
         digitalWrite(led[0], HIGH);
         digitalWrite(led[1], LOW);
       }
       else {
         //button released
-        Serial.println("up");
         digitalWrite(led[0], LOW);
         digitalWrite(led[1], HIGH);
       }
     }
   }
+  prevButtonState[i] = cur;
 }
 
 
