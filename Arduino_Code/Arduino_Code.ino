@@ -27,8 +27,8 @@ String recString = "";
 int seqArr[50];
 int btnLog[50];
 int btnLogIndex = 0;
-
-
+String sendSequence = "";
+String sendMorse = "";
 
 //Status trackers
 boolean displayingSequence = false;
@@ -42,42 +42,25 @@ boolean playerWasCorrect = true;
 int animationArr[] = {0,1,2,3,0,1,2,3,0,1,2,3,0,-1,0,-1,0,-1,0};
 int animationIndex = -1;
 int endI;
-const int animationLEDonDuration = 300;
-const int animationLEDoffDuration = 100;
+const int animationLEDonDuration = 100;
+const int animationLEDoffDuration = 20;
 
 //for tweaking how sequence it output to user
-const int LEDonDuration = 1000;
-const int LEDoffDuration = 500;
+const int LEDonDuration = 800;
+const int LEDoffDuration = 400;
 unsigned long timeLEDlastChanged = 0;
 boolean LEDon = false;
 
 
-/*
- 
- boolean arduinoTurn = false;
- String recMessage = "";
- boolean LEDon = false;
- 
- unsigned long timeOfLastChange;
- int seqArr[100];
- int repeatArr[100];
-
- boolean playerRepeating = false;
- boolean playerCreating = false;
- boolean prevBtns[] = {false, false, false, false};
-*/
-
 void setup() {
  
  Serial.begin(9600);
- pinMode(btn0, INPUT);
- pinMode(btn1, INPUT);
- pinMode(btn2, INPUT);
- pinMode(btn3, INPUT);
- pinMode(led0, OUTPUT);
- pinMode(led1, OUTPUT);
- pinMode(led2, OUTPUT);
- pinMode(led3, OUTPUT);
+
+ for (int i = 0; i < 4; i++)
+ {
+  pinMode(btn[i], INPUT);
+  pinMode(led[i], OUTPUT);
+ }
  recString.reserve(400);
 }
 
@@ -99,6 +82,11 @@ void loop() {
         displayingSequence = false;
         repeatingSequence = true;
         listeningToButtons = true;
+        for (int i = 0; i < seqLength; i ++)
+        {
+          btnLog[i] = -1;
+        }
+        btnLogIndex = 0;
         seqIndex = 0;
       }
       timeLEDlastChanged = millis();
@@ -114,7 +102,7 @@ void loop() {
     
   }
   
-  if(repeatingSequence)
+  else if(repeatingSequence)
   {
     //see if the user is done pressing buttons
     if(btnLogIndex == seqLength)
@@ -137,43 +125,27 @@ void loop() {
       for (int i = 0; i < seqLength; i ++)
           btnLog[i] = -1;
       btnLogIndex = 0;
-      animationIndex = 0;
       LEDon = false;
       animationIndex = -1;
     }
     
   }
 
-  if(displayResultAnimation)
+  else if(displayResultAnimation)
   {
+    //only set indices the first time
     if (animationIndex == -1)
     {
-      //can't use delays or they will interfere with morse code output
       if (playerWasCorrect)
       {
         animationIndex = 0;
         endI = 11;
-        Serial.println("player was correct");
       }
       else {
         animationIndex = 12;
         endI = 18;
-        Serial.println("player was wrong");
       }
     }
-
-    Serial.print(LEDon);
-    Serial.print("   ");
-    Serial.print(millis());
-    Serial.print("   ");
-    Serial.print(timeLEDlastChanged);
-    Serial.print("   ");
-    Serial.print(animationIndex);
-    Serial.print("   ");
-    Serial.println(animationArr[animationIndex]);
-    
-    
-
     //if an LED has been on and it's time to turn it off
     if(LEDon && (millis() - timeLEDlastChanged >= animationLEDonDuration))
     {
@@ -187,10 +159,8 @@ void loop() {
         displayResultAnimation = false;
         creatingSequence = true;
         listeningToButtons = true;
-        seqIndex = 0;
       }
       timeLEDlastChanged = millis();
-      Serial.println("Off");
     }
 
     //if the last LED was off and it's time to turn the next one on
@@ -199,15 +169,25 @@ void loop() {
       digitalWrite(led[animationArr[animationIndex]], HIGH);
       LEDon = true;
       timeLEDlastChanged = millis();
-      Serial.println("ON");
     }
   }
   
-  if(creatingSequence)
+  else if(creatingSequence)
   {
-    
+    //since the index is incremented after the last button was logged
+    if (btnLogIndex == seqLength)
+    {
+      for (int i = 0; i < seqLength; i ++)
+      {
+        sendSequence += String(btnLog[i]);
+      }
+      Serial.println(sendSequence);
+      creatingSequence = false;
+    }
   }
 
+
+  //seperate from status blocks of code -------------------------------------
   if (listeningToButtons)
   {
     for (int i = 0; i < 4; i ++)
@@ -228,13 +208,13 @@ void loop() {
           //now that the new state has been officially changed, make appropriate change
           if (cur)
           {
-            btnLog[btnLogIndex] = i;
-            btnLogIndex ++;
             digitalWrite(led[i], HIGH);
           }
           else {
             //button released
             digitalWrite(led[i], LOW);
+            btnLog[btnLogIndex] = i;
+            btnLogIndex ++;
           }
         }
       }
@@ -246,7 +226,8 @@ void loop() {
 
 
 
-//expect morse code to start with . or - and sequences are in the form 12031021, BOTH END WITH |
+
+//expect morse code to start with . or - and sequences are in the form 12031021, BOTH END WITH ~
 void serialEvent()
 {
   while (Serial.available())
@@ -254,10 +235,10 @@ void serialEvent()
     char inChar = (char)Serial.read();
     recString += inChar;
     
-    if (inChar == '|')
+    if (inChar == '~')
     {
-      int endIndex = recString.indexOf("|");
-      //start index = inclusive, end index = exlusive (this removes pipe)
+      int endIndex = recString.indexOf("~");
+      //start index = inclusive, end index = exlusive (this removes tilde)
       recString = recString.substring(0, endIndex);
 
       
@@ -283,9 +264,7 @@ void serialEvent()
           btnLog[i] = -1;
         btnLogIndex = 0;
       }
-           
       recString = "";
-      endIndex = -1;
     }
   }
 }
