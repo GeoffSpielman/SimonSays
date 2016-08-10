@@ -2,6 +2,10 @@
 Created by Geoff Spielman on 2016-06-25.
 Copyright (c) 2016 Geoff Spielman. All rights reserved.
 */
+
+#include <HashMap.h>
+#include <QueueList.h>
+
 const int btn0 = 2;
 const int btn1 = 3;
 const int btn2 = 4;
@@ -23,12 +27,31 @@ unsigned long debounceTime = 50;
 int seqIndex = 0;
 int seqLength = 0;
 String recString = "";
+
 //since dynamic arrays are not advised in Arduino, it is unlikely the user will get past 50
 int seqArr[50];
 int btnLog[50];
 int btnLogIndex = 0;
+
 String sendSequence = "";
 String sendMorse = "";
+
+//The queue for the morse code
+QueueList<char> morQue;
+
+//To control how morse code is output
+const int dotLength = 500;
+const int dashLength = 3*dotLength;
+
+//hash morse code 'characters' to their appropriate responces.
+const byte HASH_SIZE = 5;
+HashType<char*,int> hashRawArray[HASH_SIZE];
+HashMap<char*,int> morseMap = HashMap<char*,int>(hashRawArray , HASH_SIZE );
+int morState = 0;
+unsigned long morLength = 0;
+unsigned long morStart = 0;
+boolean morseAvailable = false;
+const int dot = 700;
 
 //Status trackers
 boolean displayingSequence = false;
@@ -52,16 +75,34 @@ unsigned long timeLEDlastChanged = 0;
 boolean LEDon = false;
 
 
+
 void setup() {
  
- Serial.begin(9600);
+  Serial.begin(9600);
+  for (int i = 0; i < 4; i++)
+  {
+    pinMode(btn[i], INPUT);
+    pinMode(led[i], OUTPUT);
+  }
+  recString.reserve(400);
 
- for (int i = 0; i < 4; i++)
- {
-  pinMode(btn[i], INPUT);
-  pinMode(led[i], OUTPUT);
- }
- recString.reserve(400);
+
+/*Since you can't store anything other than integers in this HashMap:
+ * Last digit is if it should be on (1) or off(0) (use mod 10 to determine)
+ * All other digits are how many units to perform the action (truncate divide by 10 to determine)
+ */
+morseMap[0](".", 11);
+morseMap[1]("/", 31);
+morseMap[2](" ", 30); //space between letters
+morseMap[3]("|", 70); //space between words
+morseMap[4]("?", 120);//space between messages (arbitrary, in case there are multiple)
+//morseMap.debug(); //print it
+/*According to Wikiepedia:
+ * Length of dash is three times the length of a dot
+ * Space between dash or dot is equal to the length of a dot
+ * letters are seperated by a pause equal to the length of a dash (three dots)
+ * words are seperated by 7 dots
+ */
 }
 
 
@@ -185,9 +226,11 @@ void loop() {
       creatingSequence = false;
     }
   }
+  
 
-
-  //seperate from status blocks of code -------------------------------------
+  //-----------------------------------------------------------------------------------------------
+  //----------------------seperate from status blocks of code -------------------------------------
+  //-----------------------------------------------------------------------------------------------
   if (listeningToButtons)
   {
     for (int i = 0; i < 4; i ++)
@@ -221,6 +264,38 @@ void loop() {
     prevButtonState[i] = cur;
     }
   }
+  
+  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
+  //if we're not in bypass mode and a change needs to be made
+  if (morseAvailable && (millis() - morStart > morLength))
+  {
+    //converts next char to a char pointer (Extra character for null terminator
+    char next[2];
+    String(morQue.peek()).toCharArray(next, 2);
+    Serial.println(morseMap.getValueOf(next));
+    Serial.println(morQue.peek());
+    //if the state is currently on
+    if (morState)
+    {
+      //if the next character is another dit or dah, you must wait one dot duration worth
+      //if (morseMap.getValueOf(next) % 10 == 1)
+     // {
+        
+     // }
+      
+    }
+    //just finished a pause, so no matter what we need the next character
+    else{
+      
+    }
+    //we have run out of characters
+    //if(!morQue.isEmpty())
+    //{
+      //morQue.pop(
+   //   Serial.println("Empty");
+   // }
+  }
+  
 
 }//end loop
 
@@ -242,10 +317,15 @@ void serialEvent()
       recString = recString.substring(0, endIndex);
 
       
-      //PROCESS MORSE CODE
+      //PROCESS MORSE CODE (space between letters, pipe between words)
       if (recString.charAt(0) == '.' || recString.charAt(0) == '-') 
       {
         //Add to Queue
+        for (int i = 0; i < recString.length(); i++)
+        {
+          morQue.push(recString.charAt(i));
+        }
+        morseAvailable = true; 
       }
    
       //PROCESS SEQUENCE  
