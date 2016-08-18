@@ -30,10 +30,10 @@ exitFlag = 0
 
 #every message starts 13 digits and sequence format is {3,2,3,1}
 def on_a_response(*args):
-    print("Test")
-    print(args)
+    print(args[0])
+    print(args[0][:13])
 
-    # if ()
+    
     # global curSequence
     # global rawSequence
     # global prevRawSequence
@@ -70,7 +70,7 @@ class SequenceThread(threading.Thread):
         self.name = name
     def run(self):
         socketIO.on("sequencePi", on_a_response)
-        socketIO.wait(seconds=10)
+        socketIO.wait(seconds = 10)
         socketIO.off("sequencePi")
 
 
@@ -80,7 +80,7 @@ class MessageThread(threading.Thread):
         self.name = name
     def run(self):
         socketIO.on("messagePi", on_a_response)
-        socketIO.wait(seconds=10)
+        socketIO.wait(seconds = 10)
         socketIO.off("messagePi")
 
 
@@ -119,5 +119,54 @@ while (True):
     #     socketIO.emit('sequencePi', oString)
 
 seqThread.join()
-seqThread.join()
+mesThread.join()
 print ("Exiting Main Thread")
+##
+##Threads have threaded
+##Exception in thread sequenceThread:
+##Traceback (most recent call last):
+##  File "/usr/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+##    self.run()
+##  File "Main_2.0.py", line 73, in run
+##    socketIO.wait(seconds = 10)
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/socketIO_client/__init__.py", line 246, in wait
+##    self._process_packets()
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/socketIO_client/__init__.py", line 268, in _process_packets
+##    for engineIO_packet in self._transport.recv_packet():
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/socketIO_client/transports.py", line 145, in recv_packet
+##    packet_text = self._connection.recv()
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_core.py", line 298, in recv
+##    opcode, data = self.recv_data()
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_core.py", line 315, in recv_data
+##    opcode, frame = self.recv_data_frame(control_frame)
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_core.py", line 338, in recv_data_frame
+##    return self.cont_frame.extract(frame)
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_abnf.py", line 392, in extract
+##    raise WebSocketPayloadException("cannot decode: " + repr(frame.data))
+##WebSocketPayloadException: cannot decode: '\x81\x18'
+##Exception in thread messageThread:
+##Traceback (most recent call last):
+##  File "/usr/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+##    self.run()
+##  File "Main_2.0.py", line 83, in run
+##    socketIO.wait(seconds = 10)
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/socketIO_client/__init__.py", line 246, in wait
+##    self._process_packets()
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/socketIO_client/__init__.py", line 268, in _process_packets
+##    for engineIO_packet in self._transport.recv_packet():
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/socketIO_client/transports.py", line 145, in recv_packet
+##    packet_text = self._connection.recv()
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_core.py", line 298, in recv
+##    opcode, data = self.recv_data()
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_core.py", line 315, in recv_data
+##    opcode, frame = self.recv_data_frame(control_frame)
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_core.py", line 328, in recv_data_frame
+##    frame = self.recv_frame()
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_core.py", line 360, in recv_frame
+##    return self.frame_buffer.recv_frame()
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_abnf.py", line 334, in recv_frame
+##    frame.validate(self.skip_utf8_validation)
+##  File "/home/pi/mySimonSays/venv/local/lib/python2.7/site-packages/websocket/_abnf.py", line 130, in validate
+##    raise WebSocketProtocolException("rsv is not implemented, yet")
+##WebSocketProtocolException: rsv is not implemented, yet
+
