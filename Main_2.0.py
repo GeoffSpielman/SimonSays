@@ -17,7 +17,7 @@ import threading
 import time
 import serial
 
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+#ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 curSequence = int(0)
 rawSequence = "(u'[8, 8, 8, 8]',)"
 prevRawSequence = "(u'[8, 8, 8, 8]',)"
@@ -30,6 +30,7 @@ exitFlag = 0
 
 #every message starts 13 digits and sequence format is {3,2,3,1}
 def on_a_response(*args):
+    print("Test")
     print(args)
 
     # if ()
@@ -69,6 +70,8 @@ class SequenceThread(threading.Thread):
         self.name = name
     def run(self):
         socketIO.on("sequencePi", on_a_response)
+        socketIO.wait(seconds=10)
+        socketIO.off("sequencePi")
 
 
 class MessageThread(threading.Thread):
@@ -77,6 +80,8 @@ class MessageThread(threading.Thread):
         self.name = name
     def run(self):
         socketIO.on("messagePi", on_a_response)
+        socketIO.wait(seconds=10)
+        socketIO.off("messagePi")
 
 
 
@@ -89,6 +94,7 @@ mesThread = MessageThread("messageThread")
 # Start new Threads
 seqThread.start()
 mesThread.start()
+print("Threads have threaded")
 
 
 #----------Begining of Main Program-------
