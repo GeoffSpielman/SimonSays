@@ -29,7 +29,11 @@ socketIO = SocketIO('willclark.io:1642')
 exitFlag = 0
 
 #every message starts 13 digits and sequence format is {3,2,3,1}
-def on_a_response(*args):
+def on_a_message(*args):
+    print(args[0])
+    print(args[0][:13])
+
+def on_a_sequence(*args):
     print(args[0])
     print(args[0][:13])
 
@@ -63,37 +67,27 @@ def on_a_response(*args):
 
 
 
-
-class SequenceThread(threading.Thread):
+class SocketThread(threading.Thread):
     def __init__(self, name):
         threading.Thread.__init__(self)
         self.name = name
     def run(self):
-        socketIO.on("sequencePi", on_a_response)
-        socketIO.wait(seconds = 10)
-        socketIO.off("sequencePi")
-
-
-class MessageThread(threading.Thread):
-    def __init__(self, name):
-        threading.Thread.__init__(self)
-        self.name = name
-    def run(self):
-        socketIO.on("messagePi", on_a_response)
-        socketIO.wait(seconds = 10)
-        socketIO.off("messagePi")
+            socketIO.on("messagePi", on_a_message)           
+            socketIO.on("sequencePi", on_a_sequence)
+            socketIO.wait()
+            #socketIO.off("messagePi")
+            #socketIO.off("sequencePi")
 
 
 
 # Create new threads
 #thread1 = countThread("simpleCounter", 0.2)
-seqThread = SequenceThread("sequenceThread")
-mesThread = MessageThread("messageThread")
+socketThread = SocketThread("socketThread")
+
 
 
 # Start new Threads
-seqThread.start()
-mesThread.start()
+socketThread.start()
 print("Threads have threaded")
 
 
@@ -118,8 +112,7 @@ while (True):
     #     print(oString)
     #     socketIO.emit('sequencePi', oString)
 
-seqThread.join()
-mesThread.join()
+socketThread.join()
 print ("Exiting Main Thread")
 ##
 ##Threads have threaded
