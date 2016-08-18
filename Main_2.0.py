@@ -65,29 +65,46 @@ def on_a_sequence(*args):
 #             print(self.count)
 #             time.sleep(self.interval)
 
+##
+##
+##class SocketThread(threading.Thread):
+##    def __init__(self, name):
+##        threading.Thread.__init__(self)
+##        self.name = name
+##    def run(self):
+##            socketIO.on("messagePi", on_a_message)           
+##            socketIO.on("sequencePi", on_a_sequence)
+##            socketIO.wait()
+##            #socketIO.off("messagePi")
+##            #socketIO.off("sequencePi")
 
-
-class SocketThread(threading.Thread):
+class SequenceThread(threading.Thread):
     def __init__(self, name):
         threading.Thread.__init__(self)
         self.name = name
     def run(self):
-            socketIO.on("messagePi", on_a_message)           
-            socketIO.on("sequencePi", on_a_sequence)
-            socketIO.wait()
-            #socketIO.off("messagePi")
-            #socketIO.off("sequencePi")
+            socketIO.on("sequencePi", on_a_message)
+
+class MessageThread(threading.Thread):
+    def __init__(self, name):
+        threading.Thread.__init__(self)
+        self.name = name
+    def run(self):
+            socketIO.on("messagePi", on_a_sequence)     
 
 
 
 # Create new threads
 #thread1 = countThread("simpleCounter", 0.2)
-socketThread = SocketThread("socketThread")
-
+#socketThread = SocketThread("socketThread")
+seqThread = SequenceThread("seqThread")
+mesThread = MessageThread("mesThread")
 
 
 # Start new Threads
-socketThread.start()
+#socketThread.start()
+seqThread.start()
+mesThread.start()
 print("Threads have threaded")
 
 
@@ -112,7 +129,10 @@ while (True):
     #     print(oString)
     #     socketIO.emit('sequencePi', oString)
 
-socketThread.join()
+#socketThread.join()
+seqThread.start()
+mesThread.start()
+
 print ("Exiting Main Thread")
 ##
 ##Threads have threaded
