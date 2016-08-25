@@ -3,32 +3,20 @@
 #Copyright (c) 2016 Will Clark & Geoff Spielman. All rights reserved.
 #Threading from http://www.tutorialspoint.com/python3/python_multithreading.htm
 
-#When program starts
-    #spawn threads: listen to server 1)sequences 2)
-
-#if something is available on serial (from arduino)
-#can we send a new sequence to the arduino
-
-#read from serial for message from arduino
-#write new message to arduino
-
-
 import threading
 import time
 import serial
 import ast
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-curSequence = int(0)
 prevMessageStamp = int(0101010101010)
-rawSequence = "(u'[8, 8, 8, 8]',)"
-prevRawSequence = "(u'[8, 8, 8, 8]',)"
-
+prevSeqString = ""
 
 
 from socketIO_client import SocketIO, LoggingNamespace
 socketIO = SocketIO('willclark.io:1642')
 exitFlag = 0
+
 
 #every message starts 13 digits and sequence format is {3,2,3,1}
 def on_a_message(*args):
@@ -42,48 +30,20 @@ def on_a_message(*args):
     
 
 def on_a_sequence(*args):
+    global prevSeqString
     whitelist = set("0123")
-    seqString = ""
-    seqString.join(filter(whitelist.__contains__, str(args[0])))
-    print(seqString)
-    
+    seqString = "".join(filter(whitelist.__contains__, str(args[0])))
+    seqString += "~"
+
+    if (seqString != prevSeqString):
+        prevSeqString = seqString
+        BA = bytearray()
+        BA.extend(map(ord, seqString))
+        print(BA)
+        ser.write(BA)
+
     #convert string to args[0]
     #seqArray = ast.literal_eval(str(args[0]))
-     
-    
-    #print(args[0][:13])
-
-    
-    # global curSequence
-    # global rawSequence
-    # global prevRawSequence
-    #
-    # rawSequence = args
-    # if (str(args) != str(prevRawSequence)):
-    #     newSequence = True
-    #     print("Sequence has changed")
-    #     global prevRawSequence
-    #     prevRawSequence = rawSequence
-    #     # print(prevRawSequence)
-    #     # print(rawSequence)
-
-##    rawSequence = str(rawSequence)
-##    rawSequence = rawSequence.split('[')[1]
-##    rawSequence = rawSequence.split(']')[0]    
-##    
-##    
-##    rawArray = rawSequence.split(',')
-##    for i in range (len(rawArray)):
-##        recSequence += rawArray[i]
-##    
-##    #Now looks like "3 2 3 1 2 0"
-##    oString = "s " + recSequence + "|"
-##    seqLength = int((len(recSequence)+1) / 2)
-##    BA = bytearray()
-##    BA.extend(map(ord, oString))
-##    print(BA)
-##    ser.write(BA)
-
 
 
 # class countThread(threading.Thread):
