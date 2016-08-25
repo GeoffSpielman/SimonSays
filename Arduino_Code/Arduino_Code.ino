@@ -72,10 +72,10 @@ boolean displayResultAnimation = false;
 boolean creatingSequence = false;
 boolean playerWasCorrect = true;
 boolean listeningToButtons = false;
-boolean gameOver;
+boolean phoneUserLost;
 
 //customizable display, just set indexes appropriately in displayResultAnimation
-int animationArr[] = {0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,-1,0,-1,0,-1,0};
+int animationArr[] = {2,-1,2,-1,2,-1,-1,0,-1,0,-1,0,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0};
 int animationIndex = -1;
 int endI;
 const int animationLEDonDuration = 100;
@@ -164,14 +164,22 @@ void loop() {
     //only set indices the first time
     if (animationIndex == -1)
     {
-      if (playerWasCorrect)
+      if(phoneUserLost)
       {
-        animationIndex = 0;
-        endI = 15;
+        animationIndex = 12;
+        endI = 28;
       }
-      else {
-        animationIndex = 16;
-        endI = 22;
+      else
+      {
+        if (playerWasCorrect)
+        {
+          animationIndex = 0;
+          endI = 5;
+        }
+        else {
+          animationIndex = 6;
+          endI = 11;
+        }
       }
     }
     //if an LED has been on and it's time to turn it off
@@ -190,9 +198,15 @@ void loop() {
           listeningToButtons = true;
           resetButtonLog();
         }
-        else 
-          gameOver = true;
-       
+        else
+        { 
+          if (!phoneUserLost)
+            Serial.println(9);
+
+          displayResultAnimation = false;
+          playerWasCorrect = true;
+          
+        }
       }
       timeLEDlastChanged = millis();
     }
@@ -220,12 +234,6 @@ void loop() {
       creatingSequence = false;
       listeningToButtons = false;
     }
-  }
-
-  if (gameOver)
-  {
-    Serial.println("Game Over");
-    gameOver = false;
   }
   
 
@@ -380,17 +388,25 @@ void serialEvent()
    
       //PROCESS SEQUENCE  
       else 
-      {      
-        for (int i = 0; i < recString.length(); i ++)
+      {  
+        if (recString.charAt(0) == '9')
         {
-          seqArr[i] = recString.charAt(i) - '0';
-        } 
-       
-        seqIndex = 0;
-        seqLength = recString.length();
-        displayingSequence = true;
-        //erase as much of the button log as required to enter the correct sequence
-        resetButtonLog();
+          phoneUserLost = true;
+          animationIndex = -1;
+          displayResultAnimation = true;
+        }
+        else {
+          for (int i = 0; i < recString.length(); i ++)
+          {
+            seqArr[i] = recString.charAt(i) - '0';
+          } 
+         
+          seqIndex = 0;
+          seqLength = recString.length();
+          displayingSequence = true;
+          //erase as much of the button log as required to enter the correct sequence
+          resetButtonLog();
+          }
       }
       recString = "";
     }
