@@ -8,7 +8,7 @@ import time
 import serial
 import ast
 
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+ser = serial.Serial('/dev/ttyACM1', 9600, timeout=1)
 prevMessageStamp = int(0101010101010)
 prevSeqString = ""
 
@@ -31,7 +31,7 @@ def on_a_message(*args):
 
 def on_a_sequence(*args):
     global prevSeqString
-    whitelist = set("0123")
+    whitelist = set("01239")
     seqString = "".join(filter(whitelist.__contains__, str(args[0])))
     seqString += "~"
 
@@ -84,23 +84,36 @@ print("Threads have threaded")
 
 while (True):
     pass
-    # #If there is anything to read from the Arduino
-    # if (ser.inWaiting() != 0):
-    #
-    #     recSequence = ser.readline().strip()
-    #     seqString = recSequence.decode('utf-8')
-    #     # seqString looks like "3210"
-    #     # print(seqString)
-    #     seqLength = len(seqString)
-    #     oString = "["
-    #     for i in range(seqLength - 1):
-    #         oString += (seqString[i] + ",")
-    #     oString += (seqString[seqLength - 1])
-    #     oString += "]"
-    #     # oString looks like "[3,2,1,0]"
-    #     print(oString)
-    #     socketIO.emit('sequencePi', oString)
 
+
+
+#If there is anything to read from the Arduino
+    if (ser.inWaiting() != 0):
+    
+        recString = ser.readline().strip()
+        recString = recString.decode('utf-8')
+        #recString looks like "3210" or .-.- -..- -|-.- .-. -. 
+        #print(seqString)
+
+        if (recString[0] == '-' or recString[0] == '.'):
+            recString = str(int(time.time()*1000)) + recString
+            print(recString)
+            socketIO.emit('messagePi', recString)
+            
+        else:        
+            seqLength = len(recString)
+            oString = "["
+            for i in range(seqLength - 1):
+                oString += (recString[i] + ",")
+            oString += (recString[seqLength - 1])
+            oString += "]"
+            #oString looks like "[3,2,1,0]"
+            print(oString)
+            socketIO.emit('sequencePi', oString)
+
+        oString = ""
+        recString = ""
+   
 socketThread.join()
 
 print ("Exiting Main Thread")
