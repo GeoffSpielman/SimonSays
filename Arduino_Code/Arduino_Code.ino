@@ -193,20 +193,27 @@ void loop() {
       if(animationIndex == (endI + 1))
       {
         displayResultAnimation = false;
-        if (playerWasCorrect) {
+        if (playerWasCorrect && !phoneUserLost) {
           creatingSequence = true;
           listeningToButtons = true;
           resetButtonLog();
         }
-        else
-        { 
-          if (!phoneUserLost)
+        else if (!phoneUserLost) {
             Serial.println(9);
 
           displayResultAnimation = false;
           playerWasCorrect = true;
           
         }
+        //get whole game ready to go again
+        else if (phoneUserLost)
+        {
+          animationIndex = -1;
+          phoneUserLost = false;
+          playerWasCorrect = true;
+          displayResultAnimation = false;
+        }
+        
       }
       timeLEDlastChanged = millis();
     }
