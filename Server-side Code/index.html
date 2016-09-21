@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title> Interface </title>
+
+	<link rel="stylesheet" type="text/css" href="./interface.css">
+
+	<meta charset="utf-8"/>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+	
+	
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	
+	<script src="/socket.io/socket.io.js"></script>
+
+
+</head>
+
+
+<body>
+
+	<div id="outer">
+		<div id="piDiv" class="statusDiv">
+			<div id="piConnected">
+
+			</div>
+
+			<div class="wrapper">
+				<p id="piSeqOut">3-2-4-4-7-5-5-7</p>
+
+				<div> <input id="sequencePi" type="text"> <button id="piSeqBtn">Enter</button>
+				</div>
+			</div>
+			
+
+			<div id="piSeqDisplay">
+			</div>
+
+		</div>
+
+		<div id="phoneDiv" class="statusDiv">
+			<div id="phoneConnected">
+
+			</div>
+
+			<div class="wrapper">
+				<p id="phoneSeqOut">3-2-4-4</p>
+
+				<div> <input id="sequencePhone" type="text"> <button id="phoneSeqBtn">Enter</button>
+				</div>
+			</div>
+			
+
+			<div id="phoneSeqDisplay">
+			</div>
+
+		</div>
+
+		<div id="comms"> 
+			<div id="commsInner">
+            </div>
+		</div>
+
+
+	</div>
+
+
+	<script type="text/Javascript">
+        
+            var fromMorse = {
+            '.-':"a",
+            '-...':"b",
+            '-.-.':"c",
+            '-..':"d",
+            '.':"e",
+            '..-.':"f",
+            '--.':"g",
+            '....':"h",
+            '..':"i",
+            '.---':"j",
+            '-.-':"k",
+            '.-..':"l",
+            '--':"m",
+            '-.':"n",
+            '---':"o",
+            '.--.':"p",
+            '--.-':"q",
+            '.-.':"r",
+            '...':"s",
+            '-':"t",
+            '..-':"u",
+            '...-':"v",
+            '.--':"w",
+            '-..-':"x",
+            '-.--':"y",    
+            '--..':"z",  
+            '-----':"0",  
+            '.----':"1",  
+            '..---':"2",  
+            '...--':"3",  
+            '....-':"4",  
+            '.....':"5",  
+            '-....':"6",  
+            '--...':"7",  
+            '---..':"8",  
+            '----.':"9",  
+            '.-.-.-':".",  
+            '--..--':",",  
+            '---...':":",  
+            '..--..':"?",  
+            '.----.':"\'",  
+            '-....-':"-",  
+            '-..-.':"/",  
+            '.-..-.':"\"",  
+            '.--.-.':"@",  
+            '-...-':"="
+        }
+
+        var toMorse = {
+            "a":'.-',
+            "b":'-...',
+            "c":'-.-.',
+            "d":'-..',
+            "e":'.',
+            "f":'..-.',
+            "g":'--.',
+            "h":'....',
+            "i":'..',
+            "j":'.---',
+            "k":'-.-',
+            "l":'.-..',
+            "m":'--',
+            "n":'-.',
+            "o":'---',
+            "p":'.--.',
+            "q":'--.-',
+            "r":'.-.',
+            "s":'...',
+            "t":'-',
+            "u":'..-',
+            "v":'...-',
+            "w":'.--',
+            "x":'-..-',
+            "y":'-.--',    
+            "z":'--..',  
+            "0":'-----',  
+            "1":'.----',  
+            "2":'..---',  
+            "3":'...--',  
+            "4":'....-',  
+            "5":'.....',  
+            "6":'-....',  
+            "7":'--...',  
+            "8":'---..',  
+            "9":'----.',  
+            ".":'.-.-.-',  
+            ",":'--..--',  
+            ":":'---...',  
+            "?":'..--..',  
+            "\'":'.----.',  
+            "-":'-....-',  
+            "/":'-..-.',  
+            "\"":'.-..-.',  
+            "@":'.--.-.',  
+            "=":'-...-'
+        }
+        
+        
+
+		var socket = io("159.203.51.138:1642");
+        
+        var circles = ['<div class="led red"></div>', '<div class="led yellow"> </div>', '<div class="led green"> </div>', '<div class="led blue"></div>']
+        
+        var adjustComms = function() {
+            $('#comms').css('height', ($(window).height() - Math.max($('#piDiv').height(),$('#phoneDiv').height()) - 20) + "px")
+        }
+
+		var updateSend = function(ev) {
+
+			var el = this;
+
+			var text = $(el).parent().find("input").val()
+
+			//alert($(el).parent().find("input").attr("id"))
+            
+            socket.emit($(el).parent().find("input").attr("id"), text)
+
+		}
+
+		var updateReceivePi = function(msgJSON) {
+            
+			var msg = JSON.parse(msgJSON)
+            
+			//$("#piSeqOut").html(msg.length)
+            
+            $("#piSeqOut").html("")
+            $("#piSeqDisplay").html("")
+            
+            var i = 0
+            
+            for (i = 0; i < msg.length - 1; i++) {
+                $("#piSeqOut").append(msg[i] + "-")
+                $("#piSeqDisplay").append(circles[msg[i]])
+                
+            }
+            
+            $("#piSeqOut").append(msg[msg.length - 1])
+            $("#piSeqDisplay").append(circles[msg[msg.length - 1]])
+            adjustComms()
+            
+		}
+        
+        
+        var updateReceivePhone = function(msgJSON) {
+            
+			var msg = JSON.parse(msgJSON)
+            
+			//$("#piSeqOut").html(msg.length)
+            
+            $("#phoneSeqOut").html("")
+            $("#phoneSeqDisplay").html("")
+            
+            var i = 0
+            
+            for (i = 0; i < msg.length - 1; i++) {
+                $("#phoneSeqOut").append(msg[i] + "-")
+                $("#phoneSeqDisplay").append(circles[msg[i]])
+                
+            }
+            
+            $("#phoneSeqOut").append(msg[msg.length - 1])
+            $("#phoneSeqDisplay").append(circles[msg[msg.length - 1]])
+            adjustComms()
+            
+		}
+
+		socket.on("sequencePi", updateReceivePhone)
+		socket.on("sequencePhone", updateReceivePi)
+        
+        
+        
+        
+        
+        var msgTimePi = ""
+        var msgTimePhone = ""
+        
+        
+        var piMsgBubbleA = '<div class="messageObj"><div class="piMessage"><div><p class="piMessageP">'
+        var piMsgBubbleB = '</p></br><p class="piMessageP">'
+        var piMsgBubbleC = '</p></br><p class="messageDate">'
+        var piMsgBubbleD = '</p></div></div></div>'
+
+
+        var messageReceiveFromPi = function(msg) {
+            
+            if (msg != "" && msg.slice(0, 13) != msgTimePhone) {
+                
+                console.log()
+                console.log(msg.slice(0, 13))
+                console.log(msg)
+                
+                msgTimePhone = msg.slice(0, 13)
+                
+                var newDate = new Date(Number(msgTimePhone))
+                
+                var weekArr = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
+                
+                var monthArr = ["Jan", "Feb", "March", "April", "May", "June", "July", "Aug", "Sept", "Nov", "Dec"]
+                
+                var htmlToAdd = piMsgBubbleA
+                
+                htmlToAdd += msg.substring(13)
+                
+                htmlToAdd += piMsgBubbleB
+                
+                htmlToAdd += translateFromMorse(msg.substring(13))
+                
+                htmlToAdd += piMsgBubbleC
+                
+                htmlToAdd += weekArr[newDate.getDay()] + " "
+                htmlToAdd += monthArr[newDate.getMonth()] + " "
+                htmlToAdd += newDate.getDate() + ", "
+                htmlToAdd += newDate.getFullYear() + ", "
+                htmlToAdd += newDate.toLocaleTimeString()
+                
+                htmlToAdd += piMsgBubbleD
+                
+                $('#commsInner').append(htmlToAdd)
+                
+                
+            }
+        }
+        
+        var phoneMsgBubbleA = '<div class="messageObj"><div class="phoneMessage"><div><p class="phoneMessageP">'
+        var phoneMsgBubbleB = '</p></br><p class="phoneMessageP">'
+        var phoneMsgBubbleC = '</p></br><p class="messageDate">'
+        var phoneMsgBubbleD = '</p></div></div></div>'
+        
+        var messageReceiveFromPhone = function(msg) {
+            console.log(msg)
+
+            if (msg != "" && msg.slice(0, 13) != msgTimePi) {
+                
+                console.log()
+                console.log(msg.slice(0, 13))
+                console.log(msg)
+                
+                msgTimePi = msg.slice(0, 13)
+                
+                var newDate = new Date(Number(msgTimePi))
+                
+                var weekArr = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
+                
+                var monthArr = ["Jan", "Feb", "March", "April", "May", "June", "July", "Aug", "Sept", "Nov", "Dec"]
+                
+                var htmlToAdd = phoneMsgBubbleA
+                
+                htmlToAdd += msg.substring(13)
+                
+                htmlToAdd += phoneMsgBubbleB
+                
+                htmlToAdd += translateToMorse(msg.substring(13))
+                
+                htmlToAdd += phoneMsgBubbleC
+                
+                htmlToAdd += weekArr[newDate.getDay()] + " "
+                htmlToAdd += monthArr[newDate.getMonth()] + " "
+                htmlToAdd += newDate.getDate() + ", "
+                htmlToAdd += newDate.getFullYear() + ", "
+                htmlToAdd += newDate.toLocaleTimeString()
+                
+                htmlToAdd += phoneMsgBubbleD
+                
+                $('#commsInner').append(htmlToAdd)
+                
+                
+            }
+        }
+        
+        socket.on("messageFromPhone", messageReceiveFromPhone)
+		socket.on("messageFromPi", messageReceiveFromPi)
+        
+        
+        
+        $("button").click(updateSend);
+        
+        
+        
+        
+        
+        
+        adjustComms()
+		$(window).resize(adjustComms)
+        
+        
+        function translateFromMorse(msg) {
+    
+            var outString = ""
+
+            var wordArr = msg.split("|")
+
+            var i = 0
+
+            for (i = 0; i < wordArr.length; i++) {
+
+                var letterArr = wordArr[i].split(" ")
+
+                var j = 0
+
+                for (j = 0; j < letterArr.length; j++) {
+                    outString += fromMorse[letterArr[j]]
+                }
+
+                if (i != wordArr.length - 1) {
+                    outString += " "
+                }
+
+            }
+
+            return outString
+        }
+
+
+        function removeChars(validChars, inputString) {
+            var regex = new RegExp('[^' + validChars + ']', 'g');
+            return inputString.replace(regex, '');
+        }
+
+
+        function translateToMorse(msg) {
+
+            msg = msg.toLowerCase()
+
+            msg = removeChars("0123456789abcdefghijklmnopqrstuvwxyz.,:?\'\"-/@= ", msg)
+
+            var outString = ""
+
+            var i = 0
+
+            for (i = 0; i < msg.length; i++) {
+
+                if (msg[i] == " ") {
+                    outString = outString.substring(0, outString.length - 1)
+                    outString += "|"
+                } else {
+                    outString += toMorse[msg[i]] + " "
+                }
+
+            }
+
+            outString = outString.substring(0, outString.length - 1);
+
+            return outString
+        }
+
+
+
+
+		
+
+	</script>
+
+</body>
+
+
+</html>

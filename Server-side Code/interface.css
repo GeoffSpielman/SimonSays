@@ -1,0 +1,194 @@
+
+html {
+	height: 100%;
+    background-color: #333333;
+}
+body {
+	margin: 0;
+	height: 100%;
+	font-family: "Trebuchet MS", "Tahoma";
+	font-size: 1.5em;
+}
+.wrapper {
+	text-align: center;
+}
+.wrapper div {
+	margin: 0px 0px 0px 0px;
+	padding: 0px;
+}
+#outer{
+	width: 100%;
+	height: 100%;
+}
+
+#piDiv {
+	background-color: #C8DAC7;
+}
+
+#piConnected{
+	width: 17px;
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	height: 17px;
+	border-radius: 50%;
+	background-color: red;
+}
+#piSeqOut {
+	display: inline-block;
+	padding: 3px 10px 3px 10px;
+	background-color: white;
+	margin: 15px 0px 0px 0px;
+	border: 2px solid black;
+}
+#piSeqIn {
+	width: 100px;
+}
+#piSeqDisplay {
+	width: 85%;
+	background-color: white;
+	margin: auto;
+	margin-top: 11px;
+	border: 2px solid black;
+	overflow: hidden;
+}
+
+
+#phoneDiv {
+	background-color: #DAACFF;
+	float: right;
+	position: relative;
+
+}
+#phoneConnected {
+	width: 17px;
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	height: 17px;
+	border-radius: 50%;
+	background-color: red;
+}
+
+#phoneSeqOut {
+	display: inline-block;
+	padding: 3px 10px 3px 10px;
+	background-color: white;
+	margin: 15px 0px 0px 0px;
+	border: 2px solid black;
+}
+#phoneSeqIn {
+	width: 100px;
+}
+#phoneSeqDisplay {
+	width: 85%;
+	background-color: white;
+	margin: auto;
+	margin-top: 11px;
+	border: 2px solid black;
+	overflow: hidden;
+}
+
+.statusDiv{
+	width: 50%;
+	float: left;
+	margin: 0px;
+	padding-bottom: 18px;
+	border-bottom: 2px solid black;
+}
+#comms {
+	height: 100%;
+	background-color: #333333;
+	width: 100%;
+	float: left;
+	overflow: auto;
+}
+#commsInner{
+	width: 100%;
+	background-color: #333333;
+    padding: 7px 0px 7px 0px;
+}
+
+
+.messageObj {
+    width: 100%;
+    padding: 3px 0px 3px 0px;
+    overflow: auto;
+}
+
+.piMessage{
+    max-width: 45%;
+    padding: 0px 0px 0px 0px;
+    margin: 0px;
+    float: left;
+}
+
+.phoneMessage{
+    max-width: 45%;
+    padding: 0px 0px 0px 0px;
+    margin: 0px;
+    float: right;
+}
+
+.piMessage div {
+    display: inline-block;
+    padding: 0px 0px 0px 10px;
+}
+
+.phoneMessage div {
+    display: inline-block;
+    padding: 0px 10px 0px 0px;
+}
+
+.piMessageP {
+    margin: 0px;
+    padding: 10px;
+    overflow: auto;
+    display: inline-block;
+    background-color: #C8DAC7;
+    font-size: 0.9em;
+    border-radius: 5px;
+}
+
+.phoneMessageP {
+    margin: 0px;
+    padding: 10px;
+    overflow: auto;
+    display: inline-block;
+    background-color: #DAACFF;
+    font-size: 0.9em;
+    border-radius: 5px;
+}
+
+
+.messageDate {
+    font-size: 0.6em;
+    margin: 0px 0px 0px 0px;
+    padding: 0px 0px 15px 0px;
+    display: inline-block;
+    float: right;
+    color: white;
+}
+
+
+.led{
+	height: 20px;
+	width: 20px;
+	margin: 5px 0px 5px 5px;
+	float: left;
+	border-radius: 50%;
+	border: 1px solid black;
+}
+
+.red {
+	background-color: red;
+}
+.yellow{
+	background-color: yellow;
+}
+.green{
+	background-color: green;
+}
+.blue{
+	background-color: blue;
+}

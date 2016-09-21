@@ -1,0 +1,27 @@
+{
+  "name": "SimonServes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": "6.2.0"
+  },
+  "scripts": {
+    "start": "node alpha.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willdavidc/SimonServes.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/willdavidc/SimonServes/issues"
+  },
+  "homepage": "https://github.com/willdavidc/SimonServes#readme",
+  "dependencies": {
+    "express": "4.14.0",
+    "socket.io": "1.4.8"
+  }
+}

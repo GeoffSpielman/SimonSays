@@ -43,17 +43,21 @@ class ViewController: UIViewController {
     var mostlyLightColour : UIColor!
     var darkColour : UIColor!
     var mostlyDarkColour : UIColor!
+    
+    var failState : Bool!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        var status = 0
+        var status = 4
         
         self.isPythonTurn = false
         self.gameOver = false
         self.lastRecievedSequence = []
         self.monitorInputPress = []
         self.nextSendOffArr = []
+        
+        self.failState = false
         
         currentPresses = [false, false, false, false]
         
@@ -88,7 +92,7 @@ class ViewController: UIViewController {
         textSendButton.addTarget(self, action: #selector(self.sendMessage), forControlEvents: UIControlEvents.TouchDown)
         textPacket.addSubview(textSendButton)
         
-        var textSendButtonLabel = UILabel(frame: CGRectMake(0, 0, screenSize.width * 0.1775, 35))
+        let textSendButtonLabel = UILabel(frame: CGRectMake(0, 0, screenSize.width * 0.1775, 35))
         textSendButtonLabel.textColor = UIColor.whiteColor()
         textSendButtonLabel.text = "Send"
         textSendButtonLabel.textAlignment = .Center
@@ -122,19 +126,59 @@ class ViewController: UIViewController {
         
         
         SocketIOManager.sharedInstance.listenForSequence(recieveSequence)
+        SocketIOManager.sharedInstance.listenForMessage(recieveMessage)
         
         //let _ = NSTimer.scheduledTimerWithTimeInterval(1.5, target: self, selector: #selector(self.playButtonFromQueue), userInfo: nil, repeats: false)
+        //self.monitorInputTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(self.monitorPlayerInput), userInfo: nil, repeats: true)
+        
+        //restartGame()
+        
+        self.firstTime = true
+        self.mostRecentMessage = ""
         
     }
     
+    var firstTime : Bool!
+    
     var waitForPlayerTimer : NSTimer!
+    
+    var mostRecentMessage : String!
+    
+    func recieveMessage(recievedData : String!) {
+        if recievedData != mostRecentMessage {
+            
+            let indexStartOfText = recievedData.startIndex.advancedBy(13)
+            let substring = recievedData.substringFromIndex(indexStartOfText)
+            
+            chatLogPacket.addMessage(substring, isLocal: false, isRecent: true)
+            mostRecentMessage = recievedData
+        }
+    }
+    
     
     func recieveSequence(recievedData : [Int]!) {
         
-        if recievedData == [4] {
+        if (recievedData == [9] && self.failState == false){
             changeStatus(6)
+            self.failState = true
+            return
+        } else if (recievedData == [9]) {
+            return
+        } else {
+            self.failState = false
+        }
+        
+        
+        if recievedData == [] && self.firstTime {
+            //changeStatus(6)
+            firstTime = false
+            restartGame()
             return
         }
+        else if (recievedData == []) {
+            return
+        }
+        
         
         if recievedData != self.lastRecievedSequence {
             print("New sequence: " + String(recievedData))
@@ -145,6 +189,7 @@ class ViewController: UIViewController {
         }
         
     }
+    
     
     func startPlayback(){
         changeStatus(2)
@@ -225,6 +270,7 @@ class ViewController: UIViewController {
             else if currentPresses[i] == false && monitorInputPress[i] == true {
                 monitorInputPress[i] = false
             }
+            //print("a")
         }
         
         if self.currentBlinks == 0 {
@@ -253,6 +299,8 @@ class ViewController: UIViewController {
         
         if (textField.text != ""){
             chatLogPacket.addMessage(textField.text!, isLocal: true, isRecent: true)
+            SocketIOManager.sharedInstance.sendMessage(textField.text!)
+            textField.text = ""
         }
         
         rapidTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(self.turnOffSendButton), userInfo: nil, repeats: true)
@@ -297,7 +345,7 @@ class ViewController: UIViewController {
             
             dataPacket.addSubview(userButton)
             
-            var buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            let buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
             buttonLabel.center = CGPoint(x: buttonLabel.center.x, y: self.dataPacket.frame.height / 2)
             buttonLabel.text = "Start"
             buttonLabel.textColor = UIColor.whiteColor()
@@ -333,7 +381,7 @@ class ViewController: UIViewController {
             textLabel.text = "Correct! Choose your own sequence: " + String(self.level)
             textLabel.textAlignment = .Center
         case 5:
-            SocketIOManager.sharedInstance.sendSequence(String([8,8,8,8]))
+            SocketIOManager.sharedInstance.sendSequence(String([9]))
             
             textLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.01, y: 0, width: self.dataPacket.frame.width * 0.735, height: self.dataPacket.frame.height * 0.8))
             textLabel.center = CGPoint(x: textLabel.center.x, y: self.dataPacket.frame.height / 2)
@@ -352,14 +400,15 @@ class ViewController: UIViewController {
             
             dataPacket.addSubview(userButton)
             
-            var buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            let buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
             buttonLabel.center = CGPoint(x: buttonLabel.center.x, y: self.dataPacket.frame.height / 2)
             buttonLabel.text = "Restart"
             buttonLabel.textColor = UIColor.whiteColor()
             buttonLabel.textAlignment = .Center
             dataPacket.addSubview(buttonLabel)
         case 6:
-            SocketIOManager.sharedInstance.sendSequence(String([8,8,8,8]))
+            
+            //SocketIOManager.sharedInstance.sendSequence(String([9]))
             
             textLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.01, y: 0, width: self.dataPacket.frame.width * 0.735, height: self.dataPacket.frame.height * 0.8))
             textLabel.center = CGPoint(x: textLabel.center.x, y: self.dataPacket.frame.height / 2)
@@ -378,7 +427,7 @@ class ViewController: UIViewController {
             
             dataPacket.addSubview(userButton)
             
-            var buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
+            let buttonLabel = UILabel(frame: CGRect(x: self.dataPacket.frame.width * 0.755, y: 0, width: self.dataPacket.frame.width * 0.23, height: self.dataPacket.frame.height * 0.8))
             buttonLabel.center = CGPoint(x: buttonLabel.center.x, y: self.dataPacket.frame.height / 2)
             buttonLabel.text = "Restart"
             buttonLabel.textColor = UIColor.whiteColor()
@@ -392,7 +441,15 @@ class ViewController: UIViewController {
     func restartGame() {
         self.level = 4
         self.changeStatus(4)
-        monitorPlayerInput()
+        self.monitorInputPress = []
+        
+        for _ in 0 ... 3 {
+            self.monitorInputPress.append(false)
+        }
+        self.currentBlinks = self.level
+        //self.monitorInputPress = [false, false, false, false]
+        self.nextSendOffArr = []
+        self.monitorInputTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(self.monitorPlayerInput), userInfo: nil, repeats: true)
     }
     
 

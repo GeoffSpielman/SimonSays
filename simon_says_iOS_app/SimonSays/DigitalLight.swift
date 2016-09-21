@@ -108,7 +108,7 @@ class DigitalLight: UIButton {
         image.drawInRect(rect)
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        return newImage
+        return newImage!
     }
 
     
